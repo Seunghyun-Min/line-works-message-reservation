@@ -16,7 +16,7 @@ export default function ReservationListPage() {
 
   const openChildWindow = () => {
     window.open(
-      "/child", // 자식창 URL (추후 연결 예정)
+      "/child", // (추후 연결 예정)
       "childWindow",
       "width=600,height=400,scrollbars=yes"
     );
@@ -67,7 +67,7 @@ export default function ReservationListPage() {
           <tbody>
             {/* 送信時間 */}
             <tr>
-              <th style={thStyle}>送信時間</th>
+              <th style={tdStyle}>送信時間</th>
               <td style={tdStyle}>
                 <DatePicker
                   selected={sendTime}
@@ -83,19 +83,33 @@ export default function ReservationListPage() {
                     sendTime ? getMaxTime(sendTime) : getMaxTime(new Date())
                   }
                   placeholderText="予約時間設定"
+                  customInput={
+                    <input
+                      style={{
+                        width: "100%",
+                        height: "40px",
+                        padding: "8px",
+                        fontSize: "16px",
+                        border: "1px solid #ccc",
+                        borderRadius: "8px",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                  }
                 />
               </td>
             </tr>
 
             {/* 個人 */}
             <tr>
-              <th style={thStyle}>個人</th>
+              <th style={tdStyle}>個人</th>
               <td style={tdStyle}>
                 <div
                   style={{
                     display: "flex",
                     alignItems: "center",
                     gap: "5px",
+                    height: "60px",
                   }}
                 >
                   <input
@@ -104,7 +118,16 @@ export default function ReservationListPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, personal: e.target.value })
                     }
-                    style={{ flex: 1 }}
+                    style={{
+                      flex: 1,
+                      width: "100%",
+                      height: "40px",
+                      padding: "8px",
+                      fontSize: "16px",
+                      border: "1px solid #ccc",
+                      borderRadius: "8px",
+                      boxSizing: "border-box",
+                    }}
                     readOnly
                   />
                   <Search
@@ -118,7 +141,7 @@ export default function ReservationListPage() {
 
             {/* グループ */}
             <tr>
-              <th style={thStyle}>グループ</th>
+              <th style={tdStyle}>グループ</th>
               <td style={tdStyle}>
                 <input
                   type="text"
@@ -126,28 +149,98 @@ export default function ReservationListPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, group: e.target.value })
                   }
-                  style={{ width: "100%" }}
+                  style={{
+                    width: "100%",
+                    height: "40px",
+                    padding: "8px",
+                    fontSize: "16px",
+                    border: "1px solid #ccc",
+                    borderRadius: "8px",
+                    boxSizing: "border-box",
+                  }}
                 />
               </td>
             </tr>
 
             {/* メッセージ内容 */}
             <tr>
-              <th style={thStyle}>メッセージ内容</th>
+              <th style={tdStyle}>メッセージ内容</th>
               <td style={tdStyle}>
-                <input
-                  type="text"
+                <textarea
                   value={formData.message}
                   onChange={(e) =>
                     setFormData({ ...formData, message: e.target.value })
                   }
-                  style={{ width: "100%" }}
+                  style={{
+                    width: "100%",
+                    minHeight: "400px",
+                    resize: "vertical",
+                    overflowY: "auto",
+                    padding: "8px",
+                    fontSize: "16px",
+                    border: "1px solid #ccc",
+                    borderRadius: "8px",
+                    boxSizing: "border-box",
+                  }}
+                  rows={4} // 기본 줄 수
                 />
               </td>
             </tr>
           </tbody>
         </table>
       </main>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          gap: "20px",
+          marginTop: "30px",
+        }}
+      >
+        <button
+          style={{
+            backgroundColor: "#4CAF50", // 초록색
+            color: "white",
+            border: "none",
+            padding: "10px 25px",
+            borderRadius: "8px",
+            fontSize: "16px",
+            cursor: "pointer",
+            transition: "background-color 0.3s",
+          }}
+          onMouseOver={(e) =>
+            (e.currentTarget.style.backgroundColor = "#2d8d4aff")
+          }
+          onMouseOut={(e) =>
+            (e.currentTarget.style.backgroundColor = "#07b53bff")
+          }
+          //onClick={handleRegister}
+        >
+          登録
+        </button>
+
+        <button
+          style={{
+            backgroundColor: "#3498db", // 파란색
+            color: "white",
+            border: "none",
+            padding: "10px 25px",
+            borderRadius: "8px",
+            fontSize: "16px",
+            cursor: "pointer",
+            transition: "background-color 0.3s",
+          }}
+          onMouseOver={(e) =>
+            (e.currentTarget.style.backgroundColor = "#3284bbff")
+          }
+          onMouseOut={(e) =>
+            (e.currentTarget.style.backgroundColor = "#3498db")
+          }
+          //onClick={handleCheckReservation}
+        >
+          予約確認
+        </button>
+      </div>
     </div>
   );
 }
