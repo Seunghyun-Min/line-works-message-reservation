@@ -21,7 +21,7 @@ export default function RootLayout({
             fontWeight: "bold",
           }}
         >
-          UPLOAD@ メッセージ要約
+          UPLOAD@ メッセージ送信予約
         </header>
 
         {/* ===== 各ページがここに入る ===== */}
