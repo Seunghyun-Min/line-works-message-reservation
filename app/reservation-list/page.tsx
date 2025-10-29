@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 
-const dummyData = Array.from({ length: 10 }).map((_, i) => ({
+const dummyData = Array.from({ length: 35 }).map((_, i) => ({
   id: i + 1,
   time: "2025-01-01 10:00",
   user: "田中",
@@ -12,12 +12,34 @@ const dummyData = Array.from({ length: 10 }).map((_, i) => ({
 }));
 
 export default function ReservationListPage() {
+  const [data, setData] = useState(dummyData);
   const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(data.length / itemsPerPage);
+
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentData = data.slice(startIndex, startIndex + itemsPerPage);
+
+  const handleDelete = (id: number) => {
+    setData((prev) => prev.filter((item) => item.id !== id));
+    setDeleteTarget(null);
+  };
 
   return (
     <div>
+      <div style={buttonArea}>
+        <button style={registerBtn}>＋ 登録</button>
+      </div>
       <table
-        style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}
+        style={{
+          width: "80%",
+          borderCollapse: "collapse",
+          textAlign: "center",
+          margin: "0 auto",
+        }}
       >
         <thead>
           <tr>
@@ -31,7 +53,7 @@ export default function ReservationListPage() {
           </tr>
         </thead>
         <tbody>
-          {dummyData.map((row) => (
+          {currentData.map((row) => (
             <tr key={row.id}>
               <td style={tdStyle}>{row.time}</td>
               <td style={tdStyle}>{row.user}</td>
@@ -49,29 +71,62 @@ export default function ReservationListPage() {
                 <button style={editBtn}>修正</button>
               </td>
               <td style={tdStyle}>
-                <button style={deleteBtn}>削除</button>
+                <button
+                  style={deleteBtn}
+                  onClick={() => setDeleteTarget(row.id)}
+                >
+                  削除
+                </button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      {/* ==== モーダル ==== */}
+      {/* ==== ページング ==== */}
+      <div style={paginationContainer}>
+        <button
+          style={pageBtn}
+          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+          disabled={currentPage === 1}
+        >
+          前へ
+        </button>
+
+        {Array.from({ length: totalPages }).map((_, i) => (
+          <button
+            key={i}
+            style={{
+              ...pageBtn,
+              ...(currentPage === i + 1 ? activePageBtn : {}),
+            }}
+            onClick={() => setCurrentPage(i + 1)}
+          >
+            {i + 1}
+          </button>
+        ))}
+
+        <button
+          style={pageBtn}
+          onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+          disabled={currentPage === totalPages}
+        >
+          次へ
+        </button>
+      </div>
+
+      {/* ==== メッセージ全文モーダル ==== */}
       {selectedMessage && (
         <div style={modalOverlay} onClick={() => setSelectedMessage(null)}>
           <div style={modalBox} onClick={(e) => e.stopPropagation()}>
-            {/* 💚 ヘッダー追加部分 */}
             <div style={modalHeader}>
               <h3 style={modalTitle}>メッセージ全文</h3>
             </div>
-
-            {/* 本文部分 */}
             <div style={modalContent}>
               <pre style={{ whiteSpace: "pre-wrap", margin: 0 }}>
                 {selectedMessage}
               </pre>
             </div>
-
             <div style={{ textAlign: "right", marginTop: "10px" }}>
               <button
                 style={modalCloseBtn}
@@ -83,10 +138,33 @@ export default function ReservationListPage() {
           </div>
         </div>
       )}
+
+      {/* ==== 削除確認モーダル ==== */}
+      {deleteTarget !== null && (
+        <div style={modalOverlay} onClick={() => setDeleteTarget(null)}>
+          <div style={modalBox} onClick={(e) => e.stopPropagation()}>
+            <div style={{ ...modalHeader, backgroundColor: "rgb(7, 181, 59)" }}>
+              <h3 style={modalTitle}>削除確認</h3>
+            </div>
+            <div style={modalContent}>
+              <p>このメッセージを削除しますか？</p>
+            </div>
+            <div style={modalFooter}>
+              <button style={cancelBtn} onClick={() => setDeleteTarget(null)}>
+                キャンセル
+              </button>
+              <button style={okBtn} onClick={() => handleDelete(deleteTarget)}>
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
+/* ==== スタイル ==== */
 const thStyle: React.CSSProperties = {
   borderBottom: "2px solid #ccc",
   padding: "10px",
@@ -103,13 +181,36 @@ const editBtn: React.CSSProperties = {
   cursor: "pointer",
 };
 const deleteBtn: React.CSSProperties = {
-  background: "#e74c3c",
+  background: "rgb(7, 181, 59)",
   color: "#fff",
   border: "none",
   padding: "6px 10px",
   cursor: "pointer",
 };
 
+/* ==== ページング ==== */
+const paginationContainer: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  gap: "5px",
+  marginTop: "20px",
+};
+const pageBtn: React.CSSProperties = {
+  border: "1px solid #ccc",
+  background: "#fff",
+  color: "#333",
+  padding: "5px 10px",
+  cursor: "pointer",
+  borderRadius: "4px",
+};
+const activePageBtn: React.CSSProperties = {
+  background: "rgb(17,141,255)",
+  color: "#fff",
+  borderColor: "rgb(17,141,255)",
+};
+
+/* ==== モーダル ==== */
 const modalOverlay: React.CSSProperties = {
   position: "fixed",
   top: 0,
@@ -153,6 +254,13 @@ const modalContent: React.CSSProperties = {
   lineHeight: "1.8",
 };
 
+const modalFooter: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "flex-end",
+  gap: "10px",
+  paddingRight: "40px",
+};
+
 const modalCloseBtn: React.CSSProperties = {
   background: "rgb(17,141,255)",
   color: "#fff",
@@ -161,4 +269,42 @@ const modalCloseBtn: React.CSSProperties = {
   borderRadius: "4px",
   cursor: "pointer",
   marginRight: "40px",
+};
+
+const cancelBtn: React.CSSProperties = {
+  background: "#fff",
+  color: "#333",
+  border: "1px solid #ccc",
+  padding: "6px 12px",
+  borderRadius: "4px",
+  cursor: "pointer",
+};
+
+const okBtn: React.CSSProperties = {
+  background: "rgb(17,141,255)",
+  color: "#fff",
+  border: "none",
+  padding: "6px 12px",
+  borderRadius: "4px",
+  cursor: "pointer",
+};
+
+const buttonArea: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "flex-start",
+  marginTop: "20px",
+  marginBottom: "10px",
+  marginLeft: "40px",
+};
+
+const registerBtn: React.CSSProperties = {
+  background: "rgb(7, 181, 59)", // 💚 緑
+  color: "#fff",
+  border: "none",
+  padding: "8px 16px",
+  borderRadius: "4px",
+  cursor: "pointer",
+  fontSize: "14px",
+  fontWeight: "bold",
+  boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
 };
