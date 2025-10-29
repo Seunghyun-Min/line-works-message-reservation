@@ -31,7 +31,12 @@ export default function ReservationListPage() {
   return (
     <div>
       <div style={buttonArea}>
-        <button style={registerBtn}>＋ 登録</button>
+        <button
+          style={registerBtn}
+          onClick={() => (location.href = "/reservation")}
+        >
+          ＋ 登録
+        </button>
       </div>
       <table
         style={{
