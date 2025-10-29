@@ -212,7 +212,7 @@ export default function ReservationListPage() {
             (e.currentTarget.style.backgroundColor = "#2d8d4aff")
           }
           onMouseOut={(e) =>
-            (e.currentTarget.style.backgroundColor = "#07b53bff")
+            (e.currentTarget.style.backgroundColor = "rgb(7, 181, 59)")
           }
           //onClick={handleRegister}
         >
@@ -221,7 +221,7 @@ export default function ReservationListPage() {
 
         <button
           style={{
-            backgroundColor: "#3498db", // 파란색
+            backgroundColor: "rgb(52, 152, 219)", // 파란색
             color: "white",
             border: "none",
             padding: "10px 25px",
