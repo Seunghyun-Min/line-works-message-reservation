@@ -1,0 +1,19 @@
+# pack-refs with: peeled fully-peeled sorted 
+8d2b05f1971bfe15d9bb2a58c0e596c4e0e41dd5 refs/heads/develop
+d427fd83d5d5e3336f92534b835184447886ac56 refs/heads/maekawa
+7a4f339c70185dc21b9e97f62a55560b629e91aa refs/heads/main
+f8e5bc87f5acf72826ad10433b5f89f0bc7c8cc7 refs/heads/min
+7763f442f49e1cd46d37613d18e8dae324cbda69 refs/heads/yu
+92163c5b036a80ae89a5527059e4d094108c33e5 refs/pull/1/head
+375254885d22a3c672cb0d724d4647c722fb2509 refs/pull/10/head
+f8e5bc87f5acf72826ad10433b5f89f0bc7c8cc7 refs/pull/11/head
+f8e5bc87f5acf72826ad10433b5f89f0bc7c8cc7 refs/pull/12/head
+8d2b05f1971bfe15d9bb2a58c0e596c4e0e41dd5 refs/pull/13/head
+fda675f21c07d6fe9b2a59c47365201cefdc5e86 refs/pull/2/head
+f284392818fab53ee39ebac4c50965e0c66a7099 refs/pull/3/head
+c3bd80f51bad27a150ee7d18042a4c97abca32e8 refs/pull/4/head
+4299d3a3216c6d81db952413b90f6f07ca8d1de7 refs/pull/5/head
+7763f442f49e1cd46d37613d18e8dae324cbda69 refs/pull/6/head
+b26ae3c9c57b7d4d6f4d49467f4fb518bebc5387 refs/pull/7/head
+d427fd83d5d5e3336f92534b835184447886ac56 refs/pull/8/head
+c405568caa3f83d1aa10a50d55579fa0b3009d48 refs/pull/9/head

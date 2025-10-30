@@ -5,7 +5,7 @@ import { GoogleAuth } from "google-auth-library";
 // Google Sheets ID
 const SHEET_ID = process.env.SPREADSHEET_ID as string;
 
-// POST 요청 처리
+// POST Request 処理
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -13,12 +13,22 @@ export async function POST(request: Request) {
 
     if (!sendTime && !personal && !group && !message) {
       return NextResponse.json(
-        { error: "必要なデータが不足しています。" },
+        { error: "項目を入力してください。" },
         { status: 400 }
       );
     }
-
-    // Google 인증 객체 생성
+    // else if (!personal && !group) {
+    //   return NextResponse.json(
+    //     { error: "宛先を入力してください。" },
+    //     { status: 400 }
+    //   );
+    // } else if (!message) {
+    //   return NextResponse.json(
+    //     { error: "内容を入力してください。" },
+    //     { status: 400 }
+    //   );
+    // }
+    // Google認証Object生成
     const auth = new GoogleAuth({
       credentials: {
         type: "service_account",
@@ -29,20 +39,20 @@ export async function POST(request: Request) {
       scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
 
-    // 시트 접근
+    // シート接続
     const doc = new GoogleSpreadsheet(SHEET_ID, auth);
     await doc.loadInfo();
 
-    // 첫 번째 시트를 가져옴
+    // 最初にシート取得
     const sheet = doc.sheetsByIndex[0];
 
-    // 새 행 추가
+    // 新しい追加加
     await sheet.addRow({
       送信時間: sendTime || "",
       個人: personal || "",
       グループ: group || "",
       メッセージ内容: message || "",
-      登録日時: new Date().toLocaleString("ja-JP"),
+      状態: "送信待機",
     });
 
     return NextResponse.json({ success: true });

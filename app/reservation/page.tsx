@@ -5,6 +5,7 @@ import { Search } from "lucide-react";
 import { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { useRouter } from "next/navigation";
 
 export default function ReservationListPage() {
   const [formData, setFormData] = useState({
@@ -24,7 +25,7 @@ export default function ReservationListPage() {
 
   const [sendTime, setSendTime] = useState<Date | null>(null);
 
-  // 현재 시간 기준, 최소 시간 계산
+  // 現在時間基準, 最小時間計算
   const getMinTime = (date: Date) => {
     const now = new Date();
     const minTime = new Date(date);
@@ -34,12 +35,12 @@ export default function ReservationListPage() {
       date.getMonth() === now.getMonth() &&
       date.getDate() === now.getDate()
     ) {
-      // 오늘 날짜면 현재 시간 또는 9시 중 큰 값
+      // 当日なら現在時間と9時で大きい方
       const nextHour = new Date();
       nextHour.setHours(now.getHours() + 1, 0, 0, 0);
       minTime.setHours(Math.max(nextHour.getHours(), 9), 0, 0, 0);
     } else {
-      // 오늘이 아니면 9시
+      // 今日じゃなかったら9時
       minTime.setHours(9, 0, 0, 0);
     }
 
@@ -76,6 +77,8 @@ export default function ReservationListPage() {
       console.error(err);
     }
   };
+
+  const router = useRouter();
 
   return (
     <div style={{ fontFamily: "sans-serif" }}>
@@ -215,7 +218,6 @@ export default function ReservationListPage() {
                     borderRadius: "8px",
                     boxSizing: "border-box",
                   }}
-                  rows={4} // 기본 줄 수
                 />
               </td>
             </tr>
@@ -232,7 +234,7 @@ export default function ReservationListPage() {
       >
         <button
           style={{
-            backgroundColor: "#4CAF50", // 초록색
+            backgroundColor: "#4CAF50",
             color: "white",
             border: "none",
             padding: "10px 25px",
@@ -254,7 +256,7 @@ export default function ReservationListPage() {
 
         <button
           style={{
-            backgroundColor: "rgb(52, 152, 219)", // 파란색
+            backgroundColor: "rgb(52, 152, 219)",
             color: "white",
             border: "none",
             padding: "10px 25px",
@@ -269,7 +271,7 @@ export default function ReservationListPage() {
           onMouseOut={(e) =>
             (e.currentTarget.style.backgroundColor = "#3498db")
           }
-          //onClick={handleCheckReservation}
+          onClick={() => router.push("/reservation-list")}
         >
           予約確認
         </button>
