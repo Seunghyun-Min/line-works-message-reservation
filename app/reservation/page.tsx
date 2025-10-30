@@ -56,7 +56,7 @@ export default function ReservationListPage() {
     try {
       console.log("payload:", formData);
 
-      const res = await fetch("/api/sheet", {
+      const res = await fetch("/api/sheets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
