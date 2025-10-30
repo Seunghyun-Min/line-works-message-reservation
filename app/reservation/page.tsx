@@ -271,7 +271,7 @@ export default function ReservationListPage() {
           onMouseOut={(e) =>
             (e.currentTarget.style.backgroundColor = "#3498db")
           }
-          onClick={() => router.push("/reservation-list")}
+          //onClick={handleCheckReservation}
         >
           予約確認
         </button>

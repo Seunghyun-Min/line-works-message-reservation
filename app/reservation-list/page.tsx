@@ -1,18 +1,8 @@
 "use client";
-import React, { useState } from "react";
-
-const dummyData = Array.from({ length: 35 }).map((_, i) => ({
-  id: i + 1,
-  time: "2025-01-01 10:00",
-  user: "田中",
-  group: "営業部",
-  message:
-    "お疲れ様です。本日の予定です。\n10:00 クライアントA訪問\n13:00 社内打ち合わせ\n15:00 書類提出\nよろしくお願いします！",
-  status: "予約",
-}));
+import React, { useEffect, useState } from "react";
 
 export default function ReservationListPage() {
-  const [data, setData] = useState(dummyData);
+  const [data, setData] = useState<any[]>([]);
   const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -23,6 +13,34 @@ export default function ReservationListPage() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentData = data.slice(startIndex, startIndex + itemsPerPage);
 
+  // ✅ Google Sheetsからデータ取得
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch("/api/sheets");
+        const sheetData = await res.json();
+        console.log("📄 取得データ:", sheetData);
+
+        // ✅ ここでシート構造に合わせて整形
+        // 例: [[送信時間, 個人, グループ, メッセージ, 状態], [...]]
+        const formatted = sheetData.slice(1).map((row: any[], i: number) => ({
+          id: i + 1,
+          time: row[0] || "",
+          user: row[1] || "",
+          group: row[2] || "",
+          message: row[3] || "",
+          status: row[4] || "",
+        }));
+
+        setData(formatted);
+      } catch (err) {
+        console.error("❌ データ取得エラー:", err);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   const handleDelete = (id: number) => {
     setData((prev) => prev.filter((item) => item.id !== id));
     setDeleteTarget(null);
@@ -31,8 +49,15 @@ export default function ReservationListPage() {
   return (
     <div>
       <div style={buttonArea}>
-        <button style={registerBtn}>＋ 登録</button>
+        <button
+          style={registerBtn}
+          onClick={() => (location.href = "/reservation")}
+        >
+          ＋ 登録
+        </button>
       </div>
+
+      {/* ==== テーブル ==== */}
       <table
         style={{
           width: "80%",
@@ -163,6 +188,10 @@ export default function ReservationListPage() {
     </div>
   );
 }
+
+/* ==== 以下、スタイルはあなたのままでOK ==== */
+// thStyle, tdStyle, editBtn, deleteBtn, paginationContainer, pageBtn, activePageBtn, modalOverlay, modalBox, modalHeader, modalTitle, modalContent, modalFooter, modalCloseBtn, cancelBtn, okBtn, buttonArea, registerBtn
+// （既存のものをそのまま貼り付けて大丈夫です）
 
 /* ==== スタイル ==== */
 const thStyle: React.CSSProperties = {
