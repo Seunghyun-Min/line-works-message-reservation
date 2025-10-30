@@ -40,9 +40,19 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { sendTime, personal, group, message } = body;
 
-    if (!sendTime && !personal && !group && !message) {
+    if (!sendTime) {
       return NextResponse.json(
-        { error: "必要なデータが不足しています。" },
+        { error: "送信時間を選択してください。" },
+        { status: 400 }
+      );
+    } else if (!personal && !group) {
+      return NextResponse.json(
+        { error: "宛先を入力してください。" },
+        { status: 400 }
+      );
+    } else if (!message) {
+      return NextResponse.json(
+        { error: "メッセージ内容を入力してください。" },
         { status: 400 }
       );
     }

@@ -5,6 +5,7 @@ import { Search } from "lucide-react";
 import { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { useRouter } from "next/navigation";
 
 export default function ReservationListPage() {
   const [formData, setFormData] = useState({
@@ -16,7 +17,7 @@ export default function ReservationListPage() {
 
   const openChildWindow = () => {
     window.open(
-      "/child", // (추후 연결 예정)
+      "/select", // (今後連結予定)
       "childWindow",
       "width=600,height=400,scrollbars=yes"
     );
@@ -24,7 +25,7 @@ export default function ReservationListPage() {
 
   const [sendTime, setSendTime] = useState<Date | null>(null);
 
-  // 현재 시간 기준, 최소 시간 계산
+  // 現在時間基準, 最小時間計算
   const getMinTime = (date: Date) => {
     const now = new Date();
     const minTime = new Date(date);
@@ -34,15 +35,14 @@ export default function ReservationListPage() {
       date.getMonth() === now.getMonth() &&
       date.getDate() === now.getDate()
     ) {
-      // 오늘 날짜면 현재 시간 또는 9시 중 큰 값
+      // 当日なら現在時間と9時で大きい方
       const nextHour = new Date();
       nextHour.setHours(now.getHours() + 1, 0, 0, 0);
       minTime.setHours(Math.max(nextHour.getHours(), 9), 0, 0, 0);
     } else {
-      // 오늘이 아니면 9시
+      // 今日じゃなかったら9時から
       minTime.setHours(9, 0, 0, 0);
     }
-
     return minTime;
   };
 
@@ -69,13 +69,14 @@ export default function ReservationListPage() {
         setFormData({ personal: "", group: "", message: "", sendTime: "" });
       } else {
         alert("エラーが発生しました: " + (data.error || "原因不明"));
-        console.error("API Error:", data.error);
       }
     } catch (err) {
       alert("通信エラーが発生しました");
       console.error(err);
     }
   };
+
+  const router = useRouter();
 
   return (
     <div style={{ fontFamily: "sans-serif" }}>
@@ -151,6 +152,7 @@ export default function ReservationListPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, personal: e.target.value })
                     }
+                    placeholder="社員を選択してください。"
                     style={{
                       flex: 1,
                       width: "100%",
@@ -182,6 +184,7 @@ export default function ReservationListPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, group: e.target.value })
                   }
+                  placeholder="チャンネルIDを入力してください。"
                   style={{
                     width: "100%",
                     height: "40px",
@@ -201,9 +204,12 @@ export default function ReservationListPage() {
               <td style={tdStyle}>
                 <textarea
                   value={formData.message}
-                  onChange={(e) =>
-                    setFormData({ ...formData, message: e.target.value })
-                  }
+                  onChange={(e) => {
+                    if (e.target.value.length <= 2000) {
+                      setFormData({ ...formData, message: e.target.value });
+                    }
+                  }}
+                  placeholder="メッセージ内容を入力してください。(最大2000文字)"
                   style={{
                     width: "100%",
                     minHeight: "400px",
@@ -215,8 +221,17 @@ export default function ReservationListPage() {
                     borderRadius: "8px",
                     boxSizing: "border-box",
                   }}
-                  rows={4} // 기본 줄 수
                 />
+                <div
+                  style={{
+                    textAlign: "right",
+                    fontSize: "12px",
+                    color: "#999",
+                    marginTop: "4px",
+                  }}
+                >
+                  {formData.message.length}/2000
+                </div>
               </td>
             </tr>
           </tbody>
@@ -232,7 +247,7 @@ export default function ReservationListPage() {
       >
         <button
           style={{
-            backgroundColor: "#4CAF50", // 초록색
+            backgroundColor: "#4CAF50",
             color: "white",
             border: "none",
             padding: "10px 25px",
@@ -254,7 +269,7 @@ export default function ReservationListPage() {
 
         <button
           style={{
-            backgroundColor: "rgb(52, 152, 219)", // 파란색
+            backgroundColor: "rgb(52, 152, 219)",
             color: "white",
             border: "none",
             padding: "10px 25px",
@@ -269,7 +284,7 @@ export default function ReservationListPage() {
           onMouseOut={(e) =>
             (e.currentTarget.style.backgroundColor = "#3498db")
           }
-          onClick={() => (location.href = "/reservation-list")}
+          onClick={() => router.push("/reservation-list")}
         >
           予約確認
         </button>
