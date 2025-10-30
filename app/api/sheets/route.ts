@@ -40,9 +40,19 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { sendTime, personal, group, message } = body;
 
-    if (!sendTime && !personal && !group && !message) {
+    if (!sendTime) {
       return NextResponse.json(
-        { error: "必要なデータが不足しています。" },
+        { error: "送信時間を選択してください。" },
+        { status: 400 }
+      );
+    } else if (!personal && !group) {
+      return NextResponse.json(
+        { error: "宛先を入力してください。" },
+        { status: 400 }
+      );
+    } else if (!message) {
+      return NextResponse.json(
+        { error: "メッセージ内容を入力してください。" },
         { status: 400 }
       );
     }
@@ -52,7 +62,8 @@ export async function POST(request: Request) {
         type: "service_account",
         project_id: process.env.GOOGLE_PROJECT_ID,
         private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-        client_email: process.env.GOOGLE_CLIENT_EMAIL,
+        //client_email: process.env.GOOGLE_CLIENT_EMAIL,
+        client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
       },
       scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
