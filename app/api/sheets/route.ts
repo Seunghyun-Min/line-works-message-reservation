@@ -50,6 +50,12 @@ export async function POST(request: Request) {
         { error: "宛先を入力してください。" },
         { status: 400 }
       );
+    } else if (personal && group) {
+      // 둘 다 입력되면 에러
+      return NextResponse.json(
+        { error: "宛先は個人かグループのどちらかのみ選択してください。" },
+        { status: 400 }
+      );
     } else if (!message) {
       return NextResponse.json(
         { error: "メッセージ内容を入力してください。" },
