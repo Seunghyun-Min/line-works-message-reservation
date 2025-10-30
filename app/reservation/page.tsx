@@ -52,6 +52,31 @@ export default function ReservationListPage() {
     return maxTime;
   };
 
+  const handleSubmit = async () => {
+    try {
+      console.log("payload:", formData);
+
+      const res = await fetch("/api/sheet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert("登録完了！");
+        setFormData({ personal: "", group: "", message: "", sendTime: "" });
+      } else {
+        alert("エラーが発生しました: " + (data.error || "原因不明"));
+        console.error("API Error:", data.error);
+      }
+    } catch (err) {
+      alert("通信エラーが発生しました");
+      console.error(err);
+    }
+  };
+
   return (
     <div style={{ fontFamily: "sans-serif" }}>
       {/* ==== 本文 ==== */}
@@ -71,11 +96,19 @@ export default function ReservationListPage() {
               <td style={tdStyle}>
                 <DatePicker
                   selected={sendTime}
-                  onChange={(date) => setSendTime(date)}
+                  onChange={(date) => {
+                    setSendTime(date);
+                    setFormData({
+                      ...formData,
+                      sendTime: date
+                        ? date.toLocaleString("ja-JP", { hour12: false })
+                        : "",
+                    });
+                  }}
                   showTimeSelect
-                  timeIntervals={60} // 1시간 단위
+                  timeIntervals={60}
                   dateFormat="yyyy/MM/dd HH:mm"
-                  minDate={new Date()} // 오늘 이후 날짜 선택 가능
+                  minDate={new Date()}
                   minTime={
                     sendTime ? getMinTime(sendTime) : getMinTime(new Date())
                   }
@@ -214,7 +247,7 @@ export default function ReservationListPage() {
           onMouseOut={(e) =>
             (e.currentTarget.style.backgroundColor = "rgb(7, 181, 59)")
           }
-          //onClick={handleRegister}
+          onClick={handleSubmit}
         >
           登録
         </button>

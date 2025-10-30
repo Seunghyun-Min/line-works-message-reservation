@@ -10,8 +10,10 @@
   },
   "dependencies": {
     "date-fns": "^4.1.0",
+    "google-auth-library": "^10.4.2",
     "google-spreadsheet": "^5.0.2",
     "googleapis": "^164.1.0",
+    "ky": "^1.13.0",
     "lucide-react": "^0.548.0",
     "next": "16.0.0",
     "react": "19.2.0",
@@ -20,6 +22,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/google-spreadsheet": "^3.3.2",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
