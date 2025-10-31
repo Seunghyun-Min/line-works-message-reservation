@@ -46,7 +46,6 @@ export default function EmployeeModal() {
           <div className="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center z-50">
             <div className="bg-white rounded shadow p-6 w-[400px] max-h-[80vh] flex flex-col relative">
               {/* 検索バー */}
-              {/* 検索バー */}
               <div className="relative mb-4">
                 <input
                   type="text"
@@ -55,10 +54,6 @@ export default function EmployeeModal() {
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full border rounded px-3 py-2 pr-8 outline-none"
                   id="serch"
-                />
-                <AiOutlineSearch
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer hover:text-gray-600"
-                  size={35}
                 />
               </div>
 
