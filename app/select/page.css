@@ -26,7 +26,7 @@
   font-size: 16px;
   cursor: pointer;
   transition: background-color 0.3s;
-  margin-left: 94%;
+  margin-left: 87%;
   padding: 10px 25px;
   writing-mode: horizontal-tb !important;
   text-orientation: mixed !important;
@@ -36,7 +36,7 @@
   margin-top: 40px;
 }
 #serch {
-  width: 95%;
+  width: 100%;
   height: 50px;
 
   margin-bottom: 20px;
