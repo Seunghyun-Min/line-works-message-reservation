@@ -19,7 +19,7 @@ export default function ReservationListPage() {
     window.open(
       "/select", // (今後連結予定)
       "childWindow",
-      "width=600,height=400,scrollbars=yes"
+      "width=600,height=800,resizable=no,scrollbars=yes"
     );
   };
 
