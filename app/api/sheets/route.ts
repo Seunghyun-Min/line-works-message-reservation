@@ -20,7 +20,7 @@ export async function GET() {
     const sheets = google.sheets({ version: "v4", auth });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: "A1:F10", // 必要に応じて調整
+      range: "A1:F150", // 必要に応じて調整
     });
 
     console.log("📄 Spreadsheet Data:", res.data.values);
@@ -38,7 +38,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { sendTime, personal, group, message } = body;
+    const { sendTime, personal, personalIds, group, message } = body;
 
     if (!sendTime) {
       return NextResponse.json(
@@ -84,6 +84,7 @@ export async function POST(request: Request) {
       グループ: group || "",
       メッセージ内容: message || "",
       状態: "送信待機",
+      ユーザーID: Array.isArray(personalIds) ? personalIds.join(",") : "",
     });
 
     return NextResponse.json({ success: true });
