@@ -1,6 +1,6 @@
 // main.js
 import { getAccessToken } from "./auth/tokenManager.js";
-import { getUserList } from "./app/api/users.js";
+import { getUserList } from "./app/api/users.js"; // ← 修正ポイント
 
 (async () => {
   try {
@@ -12,7 +12,7 @@ import { getUserList } from "./app/api/users.js";
     console.log(tokenData);
 
     console.log("\n👥 社員リスト取得中...");
-    const users = await getUserList(accessToken);
+    const users = await getUserList(accessToken); // ← 関数名も一致させる
 
     console.log("\n✅ 取得結果:");
     console.table(users);
