@@ -1,4 +1,5 @@
 "use client";
+console.log("CallbackPage 렌더됨");
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -10,9 +11,10 @@ export default function CallbackPage() {
   useEffect(() => {
     const code = searchParams.get("code");
     if (!code) return;
+    console.log(code);
 
     const fetchTokenAndUsers = async () => {
-      // 1️⃣ 토큰 교환
+      // 1️⃣ トークン交換
       const tokenRes = await fetch("/api/token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -20,8 +22,9 @@ export default function CallbackPage() {
       });
       const tokenData = await tokenRes.json();
       const accessToken = tokenData.access_token;
+      console.log(accessToken);
 
-      // 2️⃣ 사원 리스트 조회
+      // 2️⃣ 社員リスト
       const userRes = await fetch("https://www.worksapis.com/v1.0/users", {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -37,7 +40,7 @@ export default function CallbackPage() {
 
   return (
     <div>
-      <h1>사원 리스트</h1>
+      <h1>社員リスト</h1>
       <ul>
         {userList.map((u: any) => (
           <li key={u.userId}>

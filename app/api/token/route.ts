@@ -6,9 +6,9 @@ export async function POST(req: NextRequest) {
   const params = new URLSearchParams();
   params.append("grant_type", "authorization_code");
   params.append("code", code);
-  params.append("client_id", process.env.CLIENT_ID!);
-  params.append("client_secret", process.env.CLIENT_SECRET!);
-  params.append("redirect_uri", process.env.REDIRECT_URI!);
+  params.append("client_id", process.env.NEXT_PUBLIC_CLIENT_ID!);
+  params.append("client_secret", process.env.NEXT_PUBLIC_CLIENT_SECRET!);
+  params.append("redirect_uri", process.env.NEXT_PUBLIC_REDIRECT_URI!);
 
   const res = await fetch("https://auth.worksmobile.com/oauth2/v2.0/token", {
     method: "POST",
