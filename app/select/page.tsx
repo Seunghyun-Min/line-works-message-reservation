@@ -14,6 +14,7 @@ export default function EmployeeModal() {
   const [search, setSearch] = useState("");
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [selectedEmployees, setSelectedEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true); // 🔹 ローディング状態追加
 
   // 🔹 初回マウント時にAPIから社員リスト取得
   useEffect(() => {
@@ -24,6 +25,8 @@ export default function EmployeeModal() {
         setEmployees(data);
       } catch (err) {
         console.error("社員リスト取得失敗:", err);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -40,6 +43,7 @@ export default function EmployeeModal() {
     }
   };
 
+  // 🔹 検索文字が空なら全員を表示
   const filteredEmployees = employees.filter((e) => e.name.includes(search));
 
   return (
@@ -52,14 +56,14 @@ export default function EmployeeModal() {
         <div className="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center z-50">
           <div className="bg-white rounded shadow p-6 w-[400px] max-h-[80vh] flex flex-col relative">
             {/* 検索バー */}
-            <div className="relative mb-4">
+            <div className="relative mb-4 flex items-center">
               <input
                 type="text"
                 placeholder="検索"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full border rounded px-3 py-2 pr-8 outline-none"
-                id="serch"
+                className="w-full border rounded px-8 py-2 outline-none"
+                id="search"
               />
             </div>
 
@@ -68,29 +72,35 @@ export default function EmployeeModal() {
               className="overflow-y-auto flex flex-col gap-2 flex-1 mb-4 border rounded p-2"
               id="candidate"
             >
-              {filteredEmployees.map((employee) => (
-                <label
-                  key={employee.userId}
-                  className="block mb-2 cursor-pointer border rounded p-2"
-                >
-                  <div className="flex flex-col">
-                    <input
-                      type="checkbox"
-                      checked={
-                        !!selectedEmployees.find(
-                          (e) => e.userId === employee.userId
-                        )
-                      }
-                      onChange={() => toggleEmployee(employee)}
-                      className="mb-1"
-                    />
-                    <span>{employee.name}</span>
-                  </div>
-                </label>
-              ))}
-
-              {filteredEmployees.length === 0 && (
-                <p className="text-gray-400 text-sm">該当する社員がいません</p>
+              {loading ? (
+                <p className="text-gray-400 text-sm text-center">
+                  読み込み中...
+                </p>
+              ) : filteredEmployees.length > 0 ? (
+                filteredEmployees.map((employee) => (
+                  <label
+                    key={employee.userId}
+                    className="block mb-2 cursor-pointer border rounded p-2"
+                  >
+                    <div className="flex flex-col">
+                      <input
+                        type="checkbox"
+                        checked={
+                          !!selectedEmployees.find(
+                            (e) => e.userId === employee.userId
+                          )
+                        }
+                        onChange={() => toggleEmployee(employee)}
+                        className="mb-1"
+                      />
+                      <span>{employee.name}</span>
+                    </div>
+                  </label>
+                ))
+              ) : (
+                <p className="text-gray-400 text-sm text-center">
+                  該当する社員がいません
+                </p>
               )}
             </div>
 

@@ -26,14 +26,24 @@
   font-size: 16px;
   cursor: pointer;
   transition: background-color 0.3s;
-  margin-left: 87%;
+  float: right;
   padding: 10px 25px;
   writing-mode: horizontal-tb !important;
   text-orientation: mixed !important;
-  display: inline-block;
+
   white-space: nowrap; /* ← 折り返し防止 */
   transform: none !important; /* ← 回転されている場合の保険 */
   margin-top: 40px;
+}
+#search {
+  width: 100%;
+  height: 50px;
+
+  margin-bottom: 20px;
+  border-radius: 8px;
+  font-size: 16px;
+  color: #999;
+  border: 1px #ccc solid;
 }
 
 #big {
