@@ -1,11 +1,14 @@
+import { google } from "googleapis";
 import { NextResponse } from "next/server";
-import { getUserList } from "../users.js";
-import { getAccessToken } from "../../../auth/tokenManager.js";
 import { GoogleSpreadsheet } from "google-spreadsheet";
 import { GoogleAuth } from "google-auth-library";
+import { randomUUID } from "crypto";
 
 const SHEET_ID = process.env.SPREADSHEET_ID as string;
 
+/**
+ * ✅ GET: スプレッドシートからデータ読み取り
+ */
 export async function GET() {
   try {
     const auth = new google.auth.JWT({
@@ -77,7 +80,6 @@ export async function POST(request: Request) {
       scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
 
-    // ④ Google Sheets に接続
     const doc = new GoogleSpreadsheet(SHEET_ID, auth);
     await doc.loadInfo();
 
@@ -96,9 +98,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, reservationId });
   } catch (err: any) {
-    console.error("❌ 社員リスト取得APIエラー:", err);
+    console.error("❌ Google Sheets 書き込みエラー:", err);
     return NextResponse.json(
-      { error: "社員リストの取得・保存に失敗しました" },
+      { error: err.message || "Google Sheets書き込みエラー" },
       { status: 500 }
     );
   }

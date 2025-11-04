@@ -1,12 +1,14 @@
 "use client";
 import { useState, useEffect } from "react";
+import { AiOutlineSearch } from "react-icons/ai";
+import "./page.css";
 
 interface Employee {
   userId: string;
   name: string;
 }
 
-export default function SelectPage() {
+export default function EmployeeModal() {
   const [isOpen, setIsOpen] = useState(true);
   const [search, setSearch] = useState("");
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -17,14 +19,11 @@ export default function SelectPage() {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        console.log("🚀 社員リスト取得開始...");
         const res = await fetch("/api/employees");
-        if (!res.ok) throw new Error(`HTTP error! ${res.status}`);
-
         const data = await res.json();
         setEmployees(Array.isArray(data) ? data : data.employees || []);
       } catch (err) {
-        console.error("❌ 社員リスト取得失敗:", err);
+        console.error("社員リスト取得失敗:", err);
       } finally {
         setLoading(false);
       }
@@ -32,18 +31,14 @@ export default function SelectPage() {
     fetchEmployees();
   }, []);
 
-  // 🔍 検索フィルター
-  const filteredEmployees = employees.filter((e) =>
-    e.name.toLowerCase().includes(search.toLowerCase())
-  );
-
-  // ✅ チェックボックス選択切り替え
   const toggleEmployee = (employee: Employee) => {
-    setSelectedEmployees((prev) =>
-      prev.find((e) => e.userId === employee.userId)
-        ? prev.filter((e) => e.userId !== employee.userId)
-        : [...prev, employee]
-    );
+    if (selectedEmployees.find((e) => e.userId === employee.userId)) {
+      setSelectedEmployees(
+        selectedEmployees.filter((e) => e.userId !== employee.userId)
+      );
+    } else {
+      setSelectedEmployees([...selectedEmployees, employee]);
+    }
   };
 
   // 検索文字が空なら全員表示
@@ -66,13 +61,15 @@ export default function SelectPage() {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="mb-4 text-xl font-bold">社員選択</h1>
+    <div id="big">
+      <h1 id="name" className="mb-4 text-xl font-bold">
+        社員選択
+      </h1>
 
       {isOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center z-50">
           <div className="bg-white rounded shadow p-6 w-[400px] max-h-[80vh] flex flex-col relative">
-            {/* 🔍 検索バー */}
+            {/* 検索バー */}
             <div className="relative mb-4 flex items-center">
               <input
                 type="text"
@@ -84,7 +81,7 @@ export default function SelectPage() {
               />
             </div>
 
-            {/* 📋 候補リスト */}
+            {/* 候補リスト */}
             <div
               className="overflow-y-auto flex flex-col gap-2 flex-1 mb-4 border rounded p-2"
               id="candidate"
@@ -102,9 +99,11 @@ export default function SelectPage() {
                     <div className="flex flex-col">
                       <input
                         type="checkbox"
-                        checked={selectedEmployees.some(
-                          (e) => e.userId === employee.userId
-                        )}
+                        checked={
+                          !!selectedEmployees.find(
+                            (e) => e.userId === employee.userId
+                          )
+                        }
                         onChange={() => toggleEmployee(employee)}
                         className="mb-1"
                       />
@@ -128,7 +127,7 @@ export default function SelectPage() {
               )}
             </div>
 
-            {/* ✅ 選択ボタン */}
+            {/* 選択ボタン */}
             <button
               id="saveBtn"
               onClick={handleSelect}
