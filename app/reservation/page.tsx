@@ -1,28 +1,21 @@
 "use client";
-import React from "react";
 
+import React, { useState, useEffect } from "react";
 import { Search } from "lucide-react";
-import { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useRouter } from "next/navigation";
 
-export default function ReservationListPage() {
+export default function ReservationPage() {
   const [formData, setFormData] = useState({
     sendTime: "",
     personal: "",
+    personalIds: [] as string[],
     group: "",
     message: "",
   });
 
-  const openChildWindow = () => {
-    window.open(
-      "/select", // (今後連結予定)
-      "childWindow",
-      "width=600,height=800,resizable=no,scrollbars=yes"
-    );
-  };
-
+  const router = useRouter();
   const [sendTime, setSendTime] = useState<Date | null>(null);
 
   // 現在時間基準, 最小時間計算
@@ -52,10 +45,35 @@ export default function ReservationListPage() {
     return maxTime;
   };
 
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+
+      const data = event.data;
+      if (data.type === "SELECT_EMPLOYEE") {
+        console.log("選択した社員データ:", data);
+        setFormData((prev) => ({
+          ...prev,
+          personal: data.names.join("、"),
+          personalIds: data.ids,
+        }));
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
+
+  const openChildWindow = () => {
+    window.open(
+      "/select",
+      "childWindow",
+      "width=600,height=800,resizable=no,scrollbars=yes"
+    );
+  };
+
   const handleSubmit = async () => {
     try {
-      console.log("payload:", formData);
-
       const res = await fetch("/api/sheets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -66,7 +84,13 @@ export default function ReservationListPage() {
 
       if (res.ok) {
         alert("登録完了！");
-        setFormData({ personal: "", group: "", message: "", sendTime: "" });
+        setFormData({
+          personal: "",
+          personalIds: [],
+          group: "",
+          message: "",
+          sendTime: "",
+        });
       } else {
         alert("エラーが発生しました: " + (data.error || "原因不明"));
       }
@@ -76,11 +100,8 @@ export default function ReservationListPage() {
     }
   };
 
-  const router = useRouter();
-
   return (
     <div style={{ fontFamily: "sans-serif" }}>
-      {/* ==== 本文 ==== */}
       <main style={{ padding: "20px" }}>
         <table
           style={{
@@ -237,6 +258,7 @@ export default function ReservationListPage() {
           </tbody>
         </table>
       </main>
+
       <div
         style={{
           display: "flex",
@@ -245,45 +267,11 @@ export default function ReservationListPage() {
           marginTop: "30px",
         }}
       >
-        <button
-          style={{
-            backgroundColor: "#4CAF50",
-            color: "white",
-            border: "none",
-            padding: "10px 25px",
-            borderRadius: "8px",
-            fontSize: "16px",
-            cursor: "pointer",
-            transition: "background-color 0.3s",
-          }}
-          onMouseOver={(e) =>
-            (e.currentTarget.style.backgroundColor = "#2d8d4aff")
-          }
-          onMouseOut={(e) =>
-            (e.currentTarget.style.backgroundColor = "rgb(7, 181, 59)")
-          }
-          onClick={handleSubmit}
-        >
+        <button style={buttonStyleGreen} onClick={handleSubmit}>
           登録
         </button>
-
         <button
-          style={{
-            backgroundColor: "rgb(52, 152, 219)",
-            color: "white",
-            border: "none",
-            padding: "10px 25px",
-            borderRadius: "8px",
-            fontSize: "16px",
-            cursor: "pointer",
-            transition: "background-color 0.3s",
-          }}
-          onMouseOver={(e) =>
-            (e.currentTarget.style.backgroundColor = "#3284bbff")
-          }
-          onMouseOut={(e) =>
-            (e.currentTarget.style.backgroundColor = "#3498db")
-          }
+          style={buttonStyleBlue}
           onClick={() => router.push("/reservation-list")}
         >
           予約確認
@@ -293,42 +281,23 @@ export default function ReservationListPage() {
   );
 }
 
-const thStyle: React.CSSProperties = {
-  borderBottom: "2px solid #ccc",
-  padding: "10px",
-};
-
 const tdStyle: React.CSSProperties = {
   borderBottom: "1px solid #eee",
   padding: "10px",
 };
-
-const editBtn: React.CSSProperties = {
-  background: "#3498db",
-  color: "#fff",
+const buttonStyleGreen: React.CSSProperties = {
+  backgroundColor: "#4CAF50",
+  color: "white",
   border: "none",
-  padding: "6px 10px",
-  cursor: "pointer",
-};
-
-const deleteBtn: React.CSSProperties = {
-  background: "#e74c3c",
-  color: "#fff",
-  border: "none",
-  padding: "6px 10px",
-  cursor: "pointer",
-};
-const cardStyle: React.CSSProperties = {
-  border: "1px solid #ccc",
+  padding: "10px 25px",
   borderRadius: "8px",
-  padding: "15px",
-  marginBottom: "15px",
-  backgroundColor: "#f9f9f9",
-  boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+  cursor: "pointer",
 };
-
-const labelStyle: React.CSSProperties = {
-  display: "block",
-  marginBottom: "8px",
-  fontWeight: "bold",
+const buttonStyleBlue: React.CSSProperties = {
+  backgroundColor: "rgb(52, 152, 219)",
+  color: "white",
+  border: "none",
+  padding: "10px 25px",
+  borderRadius: "8px",
+  cursor: "pointer",
 };

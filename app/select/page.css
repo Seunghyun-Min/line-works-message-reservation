@@ -49,4 +49,7 @@
 #big {
   width: 80%;
   margin: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }

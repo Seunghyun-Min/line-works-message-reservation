@@ -8,17 +8,65 @@ const SHEET_ID = process.env.SPREADSHEET_ID as string;
 
 export async function GET() {
   try {
-    console.log("🚀 /api/employees 呼び出し開始...");
+    const auth = new google.auth.JWT({
+      email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+      key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+      scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
+    });
 
-    // ① アクセストークン取得
-    const tokenData = await getAccessToken();
-    const accessToken = tokenData.access_token;
+    const sheets = google.sheets({ version: "v4", auth });
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: "A1:F150", // 列が6個想定（予約ID,送信時間,個人,グループ,メッセージ内容,状態）
+    });
+    const visibleValues = res.data.values?.map((row) => row.slice(1)) || [];
 
-    // ② ユーザー一覧取得
-    const users = await getUserList(accessToken);
-    console.log(`👥 取得した社員数: ${users.length}`);
+    return NextResponse.json(visibleValues);
 
-    // ③ Google Sheets 認証
+    //console.log("📄 Spreadsheet Data:", res.data.values);
+
+    //return NextResponse.json(res.data.values || []);
+  } catch (err: any) {
+    console.error("❌ Spreadsheet 読み取りエラー:", err);
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}
+
+/**
+ * ✅ POST: スプレッドシートにデータを書き込み
+ */
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { sendTime, personal, personalIds, group, message } = body;
+
+    // --- 入力バリデーション ---
+    if (!sendTime) {
+      return NextResponse.json(
+        { error: "送信時間を選択してください。" },
+        { status: 400 }
+      );
+    } else if (!personal && !group) {
+      return NextResponse.json(
+        { error: "宛先を入力してください。" },
+        { status: 400 }
+      );
+    } else if (personal && group) {
+      return NextResponse.json(
+        { error: "宛先は個人かグループのどちらかのみ選択してください。" },
+        { status: 400 }
+      );
+    } else if (!message) {
+      return NextResponse.json(
+        { error: "メッセージ内容を入力してください。" },
+        { status: 400 }
+      );
+    }
+
+    // --- UUID生成 ---
+    const reservationId = randomUUID();
+
+    // --- Google Sheets 認証 ---
     const auth = new GoogleAuth({
       credentials: {
         type: "service_account",
@@ -33,33 +81,20 @@ export async function GET() {
     const doc = new GoogleSpreadsheet(SHEET_ID, auth);
     await doc.loadInfo();
 
-    // 「employeesList」シートを取得または作成
-    let sheet = doc.sheetsByTitle["employeesList"];
-    if (!sheet) {
-      sheet = await doc.addSheet({
-        title: "employeesList",
-        headerValues: ["userId", "name"],
-      });
-      console.log("🆕 新しいシート 'employeesList' を作成しました");
-    }
+    const sheet = doc.sheetsByIndex[0];
 
-    // 古いデータをクリアして新しいデータを上書き
-    await sheet.clear();
-    await sheet.setHeaderRow(["userId", "name"]);
+    // --- 新規行を追加 ---
+    await sheet.addRow({
+      予約ID: reservationId,
+      送信時間: sendTime || "",
+      個人: personal || "",
+      グループ: group || "",
+      メッセージ内容: message || "",
+      状態: "送信待機",
+      ユーザーID: Array.isArray(personalIds) ? personalIds.join(",") : "",
+    });
 
-    await sheet.addRows(
-      users.map((u: any) => ({
-        userId: u.userId || "",
-        name: u.name || "",
-      }))
-    );
-
-    console.log(
-      `✅ ${users.length}件の社員情報をスプレッドシートに保存しました`
-    );
-
-    // ⑤ フロントにも返す
-    return NextResponse.json(users);
+    return NextResponse.json({ success: true, reservationId });
   } catch (err: any) {
     console.error("❌ 社員リスト取得APIエラー:", err);
     return NextResponse.json(

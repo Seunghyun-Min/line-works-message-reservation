@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 
 interface Employee {
@@ -12,9 +11,9 @@ export default function SelectPage() {
   const [search, setSearch] = useState("");
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [selectedEmployees, setSelectedEmployees] = useState<Employee[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // ローディング状態
 
-  // ✅ スプレッドシート経由で社員リスト取得
+  // 初回マウント時に社員リスト取得
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
@@ -23,16 +22,13 @@ export default function SelectPage() {
         if (!res.ok) throw new Error(`HTTP error! ${res.status}`);
 
         const data = await res.json();
-        console.log("✅ スプレッドシートから取得:", data);
-
-        setEmployees(Array.isArray(data) ? data : []);
+        setEmployees(Array.isArray(data) ? data : data.employees || []);
       } catch (err) {
         console.error("❌ 社員リスト取得失敗:", err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchEmployees();
   }, []);
 
@@ -48,6 +44,25 @@ export default function SelectPage() {
         ? prev.filter((e) => e.userId !== employee.userId)
         : [...prev, employee]
     );
+  };
+
+  // 検索文字が空なら全員表示
+  const filteredEmployees = employees.filter((e) => e.name.includes(search));
+
+  // 선택 버튼 클릭 시 부모 창으로 전달
+  const handleSelect = () => {
+    if (window.opener) {
+      window.opener.postMessage(
+        {
+          type: "SELECT_EMPLOYEE",
+          names: selectedEmployees.map((e) => e.name),
+          ids: selectedEmployees.map((e) => e.userId),
+        },
+        window.location.origin
+      );
+    }
+    setIsOpen(false);
+    window.close();
   };
 
   return (
@@ -104,7 +119,7 @@ export default function SelectPage() {
               )}
             </div>
 
-            {/* 👥 選択された社員 */}
+            {/* 選択されている社員 */}
             <div className="mb-4 text-sm text-gray-700 min-h-[24px]" id="see">
               {selectedEmployees.length > 0 ? (
                 <p>{selectedEmployees.map((e) => e.name).join("、")}</p>
@@ -116,10 +131,7 @@ export default function SelectPage() {
             {/* ✅ 選択ボタン */}
             <button
               id="saveBtn"
-              onClick={() => {
-                console.log("選択社員:", selectedEmployees);
-                setIsOpen(false);
-              }}
+              onClick={handleSelect}
               className="mt-auto self-end px-4 py-2 bg-green-500 text-white rounded"
             >
               選択
