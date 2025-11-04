@@ -2,8 +2,8 @@ import { google } from "googleapis";
 import { NextResponse } from "next/server";
 import { GoogleSpreadsheet } from "google-spreadsheet";
 import { GoogleAuth } from "google-auth-library";
+import { randomUUID } from "crypto";
 
-// 環境変数
 const SHEET_ID = process.env.SPREADSHEET_ID as string;
 
 /**
@@ -20,12 +20,15 @@ export async function GET() {
     const sheets = google.sheets({ version: "v4", auth });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: "A1:F10", // 必要に応じて調整
+      range: "A1:F150", // 列が6個想定（予約ID,送信時間,個人,グループ,メッセージ内容,状態）
     });
+    const visibleValues = res.data.values?.map((row) => row.slice(1)) || [];
 
-    console.log("📄 Spreadsheet Data:", res.data.values);
+    return NextResponse.json(visibleValues);
 
-    return NextResponse.json(res.data.values || []);
+    //console.log("📄 Spreadsheet Data:", res.data.values);
+
+    //return NextResponse.json(res.data.values || []);
   } catch (err: any) {
     console.error("❌ Spreadsheet 読み取りエラー:", err);
     return NextResponse.json({ error: String(err) }, { status: 500 });
@@ -40,6 +43,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { sendTime, personal, group, message } = body;
 
+    // --- 入力バリデーション ---
     if (!sendTime) {
       return NextResponse.json(
         { error: "送信時間を選択してください。" },
@@ -51,7 +55,6 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     } else if (personal && group) {
-      // 둘 다 입력되면 에러
       return NextResponse.json(
         { error: "宛先は個人かグループのどちらかのみ選択してください。" },
         { status: 400 }
@@ -63,12 +66,15 @@ export async function POST(request: Request) {
       );
     }
 
+    // --- UUID生成 ---
+    const reservationId = randomUUID();
+
+    // --- Google Sheets 認証 ---
     const auth = new GoogleAuth({
       credentials: {
         type: "service_account",
         project_id: process.env.GOOGLE_PROJECT_ID,
         private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-        //client_email: process.env.GOOGLE_CLIENT_EMAIL,
         client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
       },
       scopes: ["https://www.googleapis.com/auth/spreadsheets"],
@@ -78,7 +84,10 @@ export async function POST(request: Request) {
     await doc.loadInfo();
 
     const sheet = doc.sheetsByIndex[0];
+
+    // --- 新規行を追加 ---
     await sheet.addRow({
+      予約ID: reservationId,
       送信時間: sendTime || "",
       個人: personal || "",
       グループ: group || "",
@@ -86,7 +95,7 @@ export async function POST(request: Request) {
       状態: "送信待機",
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, reservationId });
   } catch (err: any) {
     console.error("❌ Google Sheets 書き込みエラー:", err);
     return NextResponse.json(
