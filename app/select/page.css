@@ -35,18 +35,11 @@
   transform: none !important; /* ← 回転されている場合の保険 */
   margin-top: 40px;
 }
-#serch {
-  width: 95%;
-  height: 50px;
-
-  margin-bottom: 20px;
-  border-radius: 8px;
-  font-size: 16px;
-  color: #999;
-  border: 1px #ccc solid;
-}
 
 #big {
   width: 80%;
   margin: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
