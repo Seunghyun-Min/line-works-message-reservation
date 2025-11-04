@@ -1,33 +1,35 @@
-// app/api/employees/route.ts
 import { NextResponse } from "next/server";
 import { getUserList } from "../users.js";
 import { getAccessToken } from "../../../auth/tokenManager.js";
+import { GoogleSpreadsheet } from "google-spreadsheet";
+import { JWT } from "google-auth-library";
+
+// ---- 環境変数に設定しておく必要あり ----
+// GOOGLE_SERVICE_ACCOUNT_EMAIL
+// GOOGLE_PRIVATE_KEY
+// GOOGLE_SHEET_ID
 
 export async function GET() {
   try {
     console.log("🚀 /api/employees 呼び出し開始...");
 
-    // ① アクセストークン取得
     const tokenData = await getAccessToken();
     const accessToken = tokenData.access_token;
+    console.log("✅ アクセストークン取得OK");
 
-    // ② ユーザー一覧取得
     const users = await getUserList(accessToken);
+    console.log(`✅ 社員リスト取得OK (${users.length}件)`);
 
-    console.log(`👥 取得した社員数: ${users.length}`);
+    // Google Sheets 書き込みテスト
+    console.log("📝 Google Sheets 書き込み開始...");
 
-    // ③ フロントに返す
+    // ← このあたりでGoogle連携をしている場合、認証失敗で落ちる可能性あり
+
     return NextResponse.json(users);
-  } catch (err: unknown) {
-    // ✅ TypeScript向けに安全なエラーハンドリング
-    if (err instanceof Error) {
-      console.error("❌ 社員リスト取得APIエラー:", err.message);
-    } else {
-      console.error("❌ 社員リスト取得APIエラー:", err);
-    }
-
+  } catch (err: any) {
+    console.error("❌ 社員リスト取得APIエラー詳細:", err);
     return NextResponse.json(
-      { error: "社員リストの取得に失敗しました" },
+      { error: err.message || String(err) },
       { status: 500 }
     );
   }
