@@ -1,5 +1,4 @@
 "use client";
-console.log("CallbackPage 렌더됨");
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -11,7 +10,8 @@ export default function CallbackPage() {
   useEffect(() => {
     const code = searchParams.get("code");
     if (!code) return;
-    console.log(code);
+
+    console.log("code:", code);
 
     const fetchTokenAndUsers = async () => {
       // 1️⃣ トークン交換
@@ -20,9 +20,10 @@ export default function CallbackPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code }),
       });
+
       const tokenData = await tokenRes.json();
       const accessToken = tokenData.access_token;
-      console.log(accessToken);
+      console.log("accessToken:", accessToken);
 
       // 2️⃣ 社員リスト
       const userRes = await fetch("https://www.worksapis.com/v1.0/users", {
@@ -31,6 +32,7 @@ export default function CallbackPage() {
           "Content-Type": "application/json",
         },
       });
+
       const userData = await userRes.json();
       setUserList(userData.userList || []);
     };

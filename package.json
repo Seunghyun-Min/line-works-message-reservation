@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "cross-env NEXT_PRIVATE_TURBOPACK=false next dev",
+    "dev": "concurrently \"node main.js\" \"cross-env NEXT_PRIVATE_TURBOPACK=false next dev\"",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -30,6 +30,7 @@
     "@types/node": "^20",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
+    "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.0.0",
