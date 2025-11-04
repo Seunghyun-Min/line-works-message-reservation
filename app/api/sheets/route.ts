@@ -41,7 +41,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { sendTime, personal, group, message } = body;
+    const { sendTime, personal, personalIds, group, message } = body;
 
     // --- 入力バリデーション ---
     if (!sendTime) {
@@ -93,6 +93,7 @@ export async function POST(request: Request) {
       グループ: group || "",
       メッセージ内容: message || "",
       状態: "送信待機",
+      ユーザーID: Array.isArray(personalIds) ? personalIds.join(",") : "",
     });
 
     return NextResponse.json({ success: true, reservationId });
