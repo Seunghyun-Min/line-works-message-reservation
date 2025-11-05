@@ -1,3 +1,5 @@
+// select/page.tsx
+
 "use client";
 import { useState, useEffect } from "react";
 import { AiOutlineSearch } from "react-icons/ai";

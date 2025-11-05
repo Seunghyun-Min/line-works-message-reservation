@@ -93,7 +93,15 @@ export default function ReservationListPage() {
               </td>
               <td style={tdStyle}>{row.status}</td>
               <td style={tdStyle}>
-                <button style={editBtn}>修正</button>
+                <button
+                  style={editBtn}
+                  onClick={() => {
+                    const editUrl = `/reservation?edit=${row.id}`;
+                    location.href = editUrl;
+                  }}
+                >
+                  修正
+                </button>
               </td>
               <td style={tdStyle}>
                 <button
