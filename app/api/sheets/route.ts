@@ -1,12 +1,9 @@
 import { google } from "googleapis";
 import { NextResponse } from "next/server";
-import { GoogleSpreadsheet } from "google-spreadsheet";
-import { GoogleAuth } from "google-auth-library";
 import { randomUUID } from "crypto";
 
 const SHEET_ID = process.env.SPREADSHEET_ID as string;
 
-// --- スプレッドシート行の型 ---
 type SheetRow = {
   予約ID: string;
   送信時間: string;
@@ -18,10 +15,13 @@ type SheetRow = {
 };
 
 /**
- * ✅ GET: スプレッドシートからデータ読み取り
+ * GET: スプレッドシートからデータ読み取り
  */
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
     const auth = new google.auth.JWT({
       email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
       key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
@@ -35,15 +35,13 @@ export async function GET() {
     });
 
     const rows = res.data.values || [];
-
-    // A列（予約ID）を含めてオブジェクト化
     const data = rows.slice(1).map((row) => ({
-      id: row[0], // A列 = 予約ID
-      time: row[1], // B列 = 送信時間
-      targetUser: row[2], // C列 = 個人
-      targetGroup: row[3], // D列 = グループ
-      message: row[4], // E列 = メッセージ内容
-      status: row[5], // F列 = 状態
+      id: row[0],
+      time: row[1],
+      targetUser: row[2],
+      targetGroup: row[3],
+      message: row[4],
+      status: row[5],
       userIds: row[6]?.split(",") || [],
     }));
 
@@ -54,8 +52,9 @@ export async function GET() {
   }
 }
 
-/* --- 以下 POST / PATCH は maekawa のコードをそのまま残す --- */
-// ✅ POST: フォームデータをスプレッドシートに追加
+/**
+ * POST: フォームデータをスプレッドシートに追加
+ */
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -68,10 +67,8 @@ export async function POST(req: Request) {
 
     const sheets = google.sheets({ version: "v4", auth });
 
-    // UUID発行
     const uuid = randomUUID();
 
-    // シートに追加
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
       range: "A:G",
@@ -84,7 +81,7 @@ export async function POST(req: Request) {
             body.personal || "",
             body.group || "",
             body.message || "",
-            "送信待機",
+            "送信待機", // 統一済み
             (body.personalIds || []).join(","),
           ],
         ],
@@ -94,6 +91,77 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, id: uuid });
   } catch (err) {
     console.error("❌ スプレッドシート追加エラー:", err);
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}
+
+/**
+ * PATCH: 予約情報の更新
+ */
+export async function PATCH(req: Request) {
+  try {
+    const body = await req.json();
+    const { id, sendTime, personal, personalIds, group, message, status } =
+      body;
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "予約IDが指定されていません。" },
+        { status: 400 }
+      );
+    }
+
+    const auth = new google.auth.JWT({
+      email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+      key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+    });
+
+    const sheets = google.sheets({ version: "v4", auth });
+
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: "A1:G150",
+    });
+
+    const rows = res.data.values || [];
+    const dataRows = rows.slice(1);
+    const targetIndex = dataRows.findIndex((row) => row[0] === id);
+
+    if (targetIndex === -1) {
+      return NextResponse.json(
+        { error: `ID「${id}」が見つかりません。` },
+        { status: 404 }
+      );
+    }
+
+    const rowNumber = targetIndex + 2;
+    const oldRow = dataRows[targetIndex];
+    const newPersonalIds =
+      Array.isArray(personalIds) && personalIds.length > 0
+        ? personalIds.join(",")
+        : oldRow[6] || "";
+
+    const updatedRow = [
+      id,
+      sendTime,
+      personal,
+      group,
+      message,
+      status,
+      newPersonalIds,
+    ];
+
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SHEET_ID,
+      range: `A${rowNumber}:G${rowNumber}`,
+      valueInputOption: "USER_ENTERED",
+      requestBody: { values: [updatedRow] },
+    });
+
+    return NextResponse.json({ success: true, updated: updatedRow });
+  } catch (err: any) {
+    console.error("❌ PATCH エラー:", err);
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }

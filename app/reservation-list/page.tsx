@@ -14,6 +14,7 @@ export default function ReservationListPage() {
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentData = data.slice(startIndex, startIndex + itemsPerPage);
+  const [selectedUser, setSelectedUser] = useState<string | null>(null);
 
   // ✅ Google Sheetsからデータ取得
   useEffect(() => {
@@ -62,7 +63,7 @@ export default function ReservationListPage() {
         <thead>
           <tr>
             <th style={thStyle}>送信時間</th>
-            <th style={thStyle}>個人</th>
+            <th style={{ ...thStyle, width: "216px" }}>個人</th>
             <th style={thStyle}>グループ</th>
             <th style={thStyle}>メッセージ内容</th>
             <th style={thStyle}>状態</th>
@@ -74,7 +75,22 @@ export default function ReservationListPage() {
           {currentData.map((row) => (
             <tr key={row.id}>
               <td style={tdStyle}>{row.time}</td>
-              <td style={tdStyle}>{row.targetUser}</td>
+              {/* <td style={tdStyle}>{row.targetUser}</td> */}
+              <td
+                style={{
+                  ...tdStyle,
+                  width: "216px",
+                  maxWidth: "216px",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  cursor: "pointer",
+                }}
+                title={row.targetUser}
+                onClick={() => setSelectedUser(row.targetUser)}
+              >
+                {row.targetUser}
+              </td>
               <td style={tdStyle}>{row.targetGroup}</td>
               <td
                 style={{ ...tdStyle, cursor: "pointer" }}
@@ -139,6 +155,34 @@ export default function ReservationListPage() {
           次へ
         </button>
       </div>
+
+      {/* ==== 送付対象の社員モーダル ==== */}
+      {selectedUser && (
+        <div style={modalOverlay} onClick={() => setSelectedUser(null)}>
+          <div style={modalBox} onClick={(e) => e.stopPropagation()}>
+            <div style={modalHeader}>
+              <h3 style={modalTitle}>送付対象の社員</h3>
+            </div>
+            <div style={modalContent}>
+              <ul style={{ paddingLeft: "20px", margin: 0 }}>
+                {selectedUser.split("、").map((name, index) => (
+                  <li key={index} style={{ marginBottom: "6px" }}>
+                    {name}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div style={{ textAlign: "right", marginTop: "10px" }}>
+              <button
+                style={modalCloseBtn}
+                onClick={() => setSelectedUser(null)}
+              >
+                閉じる
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ==== メッセージ全文モーダル ==== */}
       {selectedMessage && (

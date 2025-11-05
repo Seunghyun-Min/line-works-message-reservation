@@ -23,6 +23,33 @@ export default function ReservationEditPage() {
 
   const [sendTime, setSendTime] = useState<Date | null>(null);
 
+  // 現在時間基準, 最小時間計算
+  const getMinTime = (date: Date) => {
+    const now = new Date();
+    const minTime = new Date(date);
+
+    if (
+      date.getFullYear() === now.getFullYear() &&
+      date.getMonth() === now.getMonth() &&
+      date.getDate() === now.getDate()
+    ) {
+      // 当日なら現在時間と9時で大きい方
+      const nextHour = new Date();
+      nextHour.setHours(now.getHours() + 1, 0, 0, 0);
+      minTime.setHours(Math.max(nextHour.getHours(), 9), 0, 0, 0);
+    } else {
+      // 今日じゃなかったら9時から
+      minTime.setHours(9, 0, 0, 0);
+    }
+    return minTime;
+  };
+
+  const getMaxTime = (date: Date) => {
+    const maxTime = new Date(date);
+    maxTime.setHours(18, 0, 0, 0);
+    return maxTime;
+  };
+
   // ✅ 初期データ取得
   useEffect(() => {
     if (!id) return;
@@ -111,18 +138,6 @@ export default function ReservationEditPage() {
       "childWindow",
       "width=600,height=800,resizable=no,scrollbars=yes"
     );
-  };
-
-  // ✅ 時間制限
-  const getMinTime = (date: Date) => {
-    const min = new Date(date);
-    min.setHours(0, 0, 0, 0);
-    return min;
-  };
-  const getMaxTime = (date: Date) => {
-    const max = new Date(date);
-    max.setHours(23, 59, 59, 999);
-    return max;
   };
 
   return (
