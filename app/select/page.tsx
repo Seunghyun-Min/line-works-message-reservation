@@ -1,7 +1,8 @@
 // select/page.tsx
 
 "use client";
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useRef } from "react";
 import { AiOutlineSearch } from "react-icons/ai";
 import "./page.css";
 
@@ -15,7 +16,9 @@ export default function EmployeeModal() {
   const [search, setSearch] = useState("");
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [selectedEmployees, setSelectedEmployees] = useState<Employee[]>([]);
-  const [loading, setLoading] = useState(true); // ローディング状態
+  const [loading, setLoading] = useState(true);
+
+  const isSelecting = useRef(false); // 選択ボタン押下フラグ
 
   // 初回マウント時に社員リスト取得
   useEffect(() => {
@@ -33,20 +36,10 @@ export default function EmployeeModal() {
     fetchEmployees();
   }, []);
 
-  const toggleEmployee = (employee: Employee) => {
-    if (selectedEmployees.find((e) => e.userId === employee.userId)) {
-      setSelectedEmployees(
-        selectedEmployees.filter((e) => e.userId !== employee.userId)
-      );
-    } else {
-      setSelectedEmployees([...selectedEmployees, employee]);
-    }
-  };
-
-  // 検索文字が空なら全員表示
-  const filteredEmployees = employees.filter((e) => e.name.includes(search));
-
+  // 選択ボタン押下時
   const handleSelect = () => {
+    isSelecting.current = true;
+
     if (window.opener) {
       window.opener.postMessage(
         {
@@ -57,9 +50,38 @@ export default function EmployeeModal() {
         window.location.origin
       );
     }
+
     setIsOpen(false);
     window.close();
   };
+
+  // 子画面閉じる直前の確認
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!isSelecting.current && selectedEmployees.length > 0) {
+        e.preventDefault();
+        e.returnValue = "宛先が保存されませんがよろしいでしょうか？";
+        return e.returnValue;
+      }
+      return undefined;
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [selectedEmployees]);
+
+  // 社員選択の切り替え
+  const toggleEmployee = (employee: Employee) => {
+    if (selectedEmployees.find((e) => e.userId === employee.userId)) {
+      setSelectedEmployees(
+        selectedEmployees.filter((e) => e.userId !== employee.userId)
+      );
+    } else {
+      setSelectedEmployees([...selectedEmployees, employee]);
+    }
+  };
+
+  const filteredEmployees = employees.filter((e) => e.name.includes(search));
 
   return (
     <div id="big">

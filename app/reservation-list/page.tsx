@@ -1,10 +1,12 @@
 "use client";
+
+//import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 export default function ReservationListPage() {
   const [data, setData] = useState<any[]>([]);
   const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
   const itemsPerPage = 10;
@@ -12,6 +14,7 @@ export default function ReservationListPage() {
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentData = data.slice(startIndex, startIndex + itemsPerPage);
+  const [selectedUser, setSelectedUser] = useState<string | null>(null);
 
   // ✅ Google Sheetsからデータ取得
   useEffect(() => {
@@ -21,18 +24,8 @@ export default function ReservationListPage() {
         const sheetData = await res.json();
         console.log("📄 取得データ:", sheetData);
 
-        // ✅ ここでシート構造に合わせて整形
-        // 例: [[送信時間, 個人, グループ, メッセージ, 状態], [...]]
-        const formatted = sheetData.slice(1).map((row: any[], i: number) => ({
-          id: i + 1,
-          time: row[0] || "",
-          user: row[1] || "",
-          group: row[2] || "",
-          message: row[3] || "",
-          status: row[4] || "",
-        }));
-
-        setData(formatted);
+        // 予約IDは含めるが画面では非表示
+        setData(sheetData);
       } catch (err) {
         console.error("❌ データ取得エラー:", err);
       }
@@ -41,13 +34,14 @@ export default function ReservationListPage() {
     fetchData();
   }, []);
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     setData((prev) => prev.filter((item) => item.id !== id));
     setDeleteTarget(null);
   };
 
   return (
     <div>
+      {/* 登録ボタン */}
       <div style={buttonArea}>
         <button
           style={registerBtn}
@@ -69,7 +63,7 @@ export default function ReservationListPage() {
         <thead>
           <tr>
             <th style={thStyle}>送信時間</th>
-            <th style={thStyle}>個人</th>
+            <th style={{ ...thStyle, width: "216px" }}>個人</th>
             <th style={thStyle}>グループ</th>
             <th style={thStyle}>メッセージ内容</th>
             <th style={thStyle}>状態</th>
@@ -81,13 +75,28 @@ export default function ReservationListPage() {
           {currentData.map((row) => (
             <tr key={row.id}>
               <td style={tdStyle}>{row.time}</td>
-              <td style={tdStyle}>{row.user}</td>
-              <td style={tdStyle}>{row.group}</td>
+              {/* <td style={tdStyle}>{row.targetUser}</td> */}
+              <td
+                style={{
+                  ...tdStyle,
+                  width: "216px",
+                  maxWidth: "216px",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  cursor: "pointer",
+                }}
+                title={row.targetUser}
+                onClick={() => setSelectedUser(row.targetUser)}
+              >
+                {row.targetUser}
+              </td>
+              <td style={tdStyle}>{row.targetGroup}</td>
               <td
                 style={{ ...tdStyle, cursor: "pointer" }}
                 onClick={() => setSelectedMessage(row.message)}
               >
-                {row.message.length > 30
+                {row.message?.length > 30
                   ? row.message.slice(0, 30) + "..."
                   : row.message}
               </td>
@@ -95,10 +104,9 @@ export default function ReservationListPage() {
               <td style={tdStyle}>
                 <button
                   style={editBtn}
-                  onClick={() => {
-                    const editUrl = `/reservation?edit=${row.id}`;
-                    location.href = editUrl;
-                  }}
+                  onClick={() =>
+                    (window.location.href = `/reservation/${row.id}`)
+                  }
                 >
                   修正
                 </button>
@@ -148,6 +156,34 @@ export default function ReservationListPage() {
         </button>
       </div>
 
+      {/* ==== 送付対象の社員モーダル ==== */}
+      {selectedUser && (
+        <div style={modalOverlay} onClick={() => setSelectedUser(null)}>
+          <div style={modalBox} onClick={(e) => e.stopPropagation()}>
+            <div style={modalHeader}>
+              <h3 style={modalTitle}>送付対象の社員</h3>
+            </div>
+            <div style={modalContent}>
+              <ul style={{ paddingLeft: "20px", margin: 0 }}>
+                {selectedUser.split("、").map((name, index) => (
+                  <li key={index} style={{ marginBottom: "6px" }}>
+                    {name}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div style={{ textAlign: "right", marginTop: "10px" }}>
+              <button
+                style={modalCloseBtn}
+                onClick={() => setSelectedUser(null)}
+              >
+                閉じる
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ==== メッセージ全文モーダル ==== */}
       {selectedMessage && (
         <div style={modalOverlay} onClick={() => setSelectedMessage(null)}>
@@ -186,7 +222,7 @@ export default function ReservationListPage() {
               <button style={cancelBtn} onClick={() => setDeleteTarget(null)}>
                 キャンセル
               </button>
-              <button style={okBtn} onClick={() => handleDelete(deleteTarget)}>
+              <button style={okBtn} onClick={() => handleDelete(deleteTarget!)}>
                 OK
               </button>
             </div>
@@ -233,14 +269,18 @@ const paginationContainer: React.CSSProperties = {
   gap: "5px",
   marginTop: "20px",
 };
+
 const pageBtn: React.CSSProperties = {
-  border: "1px solid #ccc",
+  borderWidth: "1px",
+  borderStyle: "solid",
+  borderColor: "#ccc",
   background: "#fff",
   color: "#333",
   padding: "5px 10px",
   cursor: "pointer",
   borderRadius: "4px",
 };
+
 const activePageBtn: React.CSSProperties = {
   background: "rgb(17,141,255)",
   color: "#fff",
