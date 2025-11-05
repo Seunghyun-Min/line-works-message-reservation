@@ -15,6 +15,7 @@ export default function ReservationEditPage() {
     id: "",
     sendTime: "",
     personal: "",
+    personalIds: [] as string[],
     group: "",
     message: "",
     status: "",
@@ -22,7 +23,7 @@ export default function ReservationEditPage() {
 
   const [sendTime, setSendTime] = useState<Date | null>(null);
 
-  // ✅ 修正対象のデータを取得
+  // ✅ 初期データ取得
   useEffect(() => {
     if (!id) return;
 
@@ -30,13 +31,14 @@ export default function ReservationEditPage() {
       try {
         const res = await fetch("/api/sheets");
         const all = await res.json();
-
         const target = all.find((item: any) => item.id === id);
+
         if (target) {
           setFormData({
             id: target.id || "",
             sendTime: target.time || "",
             personal: target.targetUser || "",
+            personalIds: target.userIds || [],
             group: target.targetGroup || "",
             message: target.message || "",
             status: target.status || "",
@@ -57,7 +59,26 @@ export default function ReservationEditPage() {
     fetchReservation();
   }, [id, router]);
 
-  // ✅ 修正を送信（例: PATCH想定）
+  // ✅ 社員選択結果を受け取る
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+
+      const data = event.data;
+      if (data.type === "SELECT_EMPLOYEE") {
+        setFormData((prev) => ({
+          ...prev,
+          personal: data.names.join("、"),
+          personalIds: data.ids,
+        }));
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
+
+  // ✅ 修正送信
   const handleSubmit = async () => {
     try {
       const res = await fetch("/api/sheets", {
@@ -76,7 +97,23 @@ export default function ReservationEditPage() {
     }
   };
 
-  // ✅ 時間制限用
+  // ✅ 社員検索ウィンドウを開く
+  const openChildWindow = () => {
+    (window as any).__SELECTED_EMPLOYEES__ = formData.personalIds.map(
+      (id, i) => ({
+        userId: id,
+        name: formData.personal.split("、")[i] || "",
+      })
+    );
+
+    window.open(
+      "/select",
+      "childWindow",
+      "width=600,height=800,resizable=no,scrollbars=yes"
+    );
+  };
+
+  // ✅ 時間制限
   const getMinTime = (date: Date) => {
     const min = new Date(date);
     min.setHours(0, 0, 0, 0);
@@ -86,10 +123,6 @@ export default function ReservationEditPage() {
     const max = new Date(date);
     max.setHours(23, 59, 59, 999);
     return max;
-  };
-
-  const openChildWindow = () => {
-    alert("社員検索機能は準備中です。");
   };
 
   return (
@@ -162,9 +195,6 @@ export default function ReservationEditPage() {
                   <input
                     type="text"
                     value={formData.personal}
-                    onChange={(e) =>
-                      setFormData({ ...formData, personal: e.target.value })
-                    }
                     placeholder="社員を選択してください。"
                     style={inputStyle}
                     readOnly
