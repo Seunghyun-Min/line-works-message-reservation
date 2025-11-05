@@ -57,4 +57,127 @@ export async function GET(request: Request) {
   }
 }
 
-/* --- 以下 POST / PATCH は maekawa のコードをそのまま残す --- */
+// ✅ POST: フォームデータをスプレッドシートに追加
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+
+    const auth = new google.auth.JWT({
+      email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+      key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+    });
+
+    const sheets = google.sheets({ version: "v4", auth });
+
+    // UUID発行
+    const uuid = randomUUID();
+
+    // シートに追加
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SHEET_ID,
+      range: "A:G",
+      valueInputOption: "RAW",
+      requestBody: {
+        values: [
+          [
+            uuid,
+            body.sendTime || "",
+            body.personal || "",
+            body.group || "",
+            body.message || "",
+            "未送信",
+            (body.personalIds || []).join(","),
+          ],
+        ],
+      },
+    });
+
+    return NextResponse.json({ ok: true, id: uuid });
+  } catch (err) {
+    console.error("❌ スプレッドシート追加エラー:", err);
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}
+
+/**
+ * ✅ PATCH: 予約情報の更新
+ * Body: { id, sendTime, personal, personalIds, group, message, status }
+ */
+export async function PATCH(req: Request) {
+  try {
+    const body = await req.json();
+    const { id, sendTime, personal, personalIds, group, message, status } =
+      body;
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "予約IDが指定されていません。" },
+        { status: 400 }
+      );
+    }
+
+    // Google 認証
+    const auth = new google.auth.JWT({
+      email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+      key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+    });
+
+    const sheets = google.sheets({ version: "v4", auth });
+
+    // 現在のスプレッドシートデータを読み込む
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: "A1:G150", // G列まで読み取る（個人ID用）
+    });
+
+    const rows = res.data.values || [];
+    //const header = rows[0];
+    const dataRows = rows.slice(1);
+
+    // 対象行を検索（A列 = 予約ID）
+    const targetIndex = dataRows.findIndex((row) => row[0] === id);
+
+    if (targetIndex === -1) {
+      return NextResponse.json(
+        { error: `ID「${id}」が見つかりません。` },
+        { status: 404 }
+      );
+    }
+
+    const rowNumber = targetIndex + 2; // ヘッダー行分を考慮して +2
+    const oldRow = dataRows[targetIndex];
+
+    const newPersonalIds =
+      Array.isArray(personalIds) && personalIds.length > 0
+        ? personalIds.join(",")
+        : oldRow[6] || ""; // ← ここが重要
+
+    // 更新するデータ
+    const updatedRow = [
+      id,
+      sendTime,
+      personal,
+      group,
+      message,
+      status,
+      newPersonalIds,
+    ];
+
+    // シートの該当行を更新
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SHEET_ID,
+      range: `A${rowNumber}:G${rowNumber}`,
+      valueInputOption: "USER_ENTERED",
+      requestBody: {
+        values: [updatedRow],
+      },
+    });
+
+    return NextResponse.json({ success: true, updated: updatedRow });
+  } catch (err: any) {
+    console.error("❌ PATCH エラー:", err);
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}
