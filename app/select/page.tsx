@@ -24,6 +24,11 @@ export default function EmployeeModal() {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
+        const openerData = (window.opener as any)?.__SELECTED_EMPLOYEES__;
+        if (Array.isArray(openerData)) {
+          setSelectedEmployees(openerData);
+        }
+
         const res = await fetch("/api/employees");
         const data = await res.json();
         setEmployees(Array.isArray(data) ? data : data.employees || []);
