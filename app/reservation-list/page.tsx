@@ -1,10 +1,12 @@
 "use client";
+
+//import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 export default function ReservationListPage() {
   const [data, setData] = useState<any[]>([]);
   const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
   const itemsPerPage = 10;
@@ -21,18 +23,8 @@ export default function ReservationListPage() {
         const sheetData = await res.json();
         console.log("📄 取得データ:", sheetData);
 
-        // ✅ ここでシート構造に合わせて整形
-        // 例: [[送信時間, 個人, グループ, メッセージ, 状態], [...]]
-        const formatted = sheetData.slice(1).map((row: any[], i: number) => ({
-          id: i + 1,
-          time: row[0] || "",
-          user: row[1] || "",
-          group: row[2] || "",
-          message: row[3] || "",
-          status: row[4] || "",
-        }));
-
-        setData(formatted);
+        // 予約IDは含めるが画面では非表示
+        setData(sheetData);
       } catch (err) {
         console.error("❌ データ取得エラー:", err);
       }
@@ -41,13 +33,14 @@ export default function ReservationListPage() {
     fetchData();
   }, []);
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     setData((prev) => prev.filter((item) => item.id !== id));
     setDeleteTarget(null);
   };
 
   return (
     <div>
+      {/* 登録ボタン */}
       <div style={buttonArea}>
         <button
           style={registerBtn}
@@ -81,19 +74,26 @@ export default function ReservationListPage() {
           {currentData.map((row) => (
             <tr key={row.id}>
               <td style={tdStyle}>{row.time}</td>
-              <td style={tdStyle}>{row.user}</td>
-              <td style={tdStyle}>{row.group}</td>
+              <td style={tdStyle}>{row.targetUser}</td>
+              <td style={tdStyle}>{row.targetGroup}</td>
               <td
                 style={{ ...tdStyle, cursor: "pointer" }}
                 onClick={() => setSelectedMessage(row.message)}
               >
-                {row.message.length > 30
+                {row.message?.length > 30
                   ? row.message.slice(0, 30) + "..."
                   : row.message}
               </td>
               <td style={tdStyle}>{row.status}</td>
               <td style={tdStyle}>
-                <button style={editBtn}>修正</button>
+                <button
+                  style={editBtn}
+                  onClick={() =>
+                    (window.location.href = `/reservation/${row.id}`)
+                  }
+                >
+                  修正
+                </button>
               </td>
               <td style={tdStyle}>
                 <button
@@ -178,7 +178,7 @@ export default function ReservationListPage() {
               <button style={cancelBtn} onClick={() => setDeleteTarget(null)}>
                 キャンセル
               </button>
-              <button style={okBtn} onClick={() => handleDelete(deleteTarget)}>
+              <button style={okBtn} onClick={() => handleDelete(deleteTarget!)}>
                 OK
               </button>
             </div>
@@ -225,14 +225,18 @@ const paginationContainer: React.CSSProperties = {
   gap: "5px",
   marginTop: "20px",
 };
+
 const pageBtn: React.CSSProperties = {
-  border: "1px solid #ccc",
+  borderWidth: "1px",
+  borderStyle: "solid",
+  borderColor: "#ccc",
   background: "#fff",
   color: "#333",
   padding: "5px 10px",
   cursor: "pointer",
   borderRadius: "4px",
 };
+
 const activePageBtn: React.CSSProperties = {
   background: "rgb(17,141,255)",
   color: "#fff",
