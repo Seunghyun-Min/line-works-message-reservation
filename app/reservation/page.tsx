@@ -67,6 +67,13 @@ export default function ReservationPage() {
   }, []);
 
   const openChildWindow = () => {
+    (window as any).__SELECTED_EMPLOYEES__ = formData.personalIds.map(
+      (id, i) => ({
+        userId: id,
+        name: formData.personal.split("、")[i] || "",
+      })
+    );
+
     window.open(
       "/select",
       "childWindow",
