@@ -57,4 +57,45 @@ export async function GET(request: Request) {
   }
 }
 
-/* --- 以下 POST / PATCH は maekawa のコードをそのまま残す --- */
+// ✅ POST: フォームデータをスプレッドシートに追加
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+
+    const auth = new google.auth.JWT({
+      email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+      key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+    });
+
+    const sheets = google.sheets({ version: "v4", auth });
+
+    // UUID発行
+    const uuid = randomUUID();
+
+    // シートに追加
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SHEET_ID,
+      range: "A:G",
+      valueInputOption: "RAW",
+      requestBody: {
+        values: [
+          [
+            uuid,
+            body.sendTime || "",
+            body.personal || "",
+            body.group || "",
+            body.message || "",
+            "送信待機",
+            (body.personalIds || []).join(","),
+          ],
+        ],
+      },
+    });
+
+    return NextResponse.json({ ok: true, id: uuid });
+  } catch (err) {
+    console.error("❌ スプレッドシート追加エラー:", err);
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}
