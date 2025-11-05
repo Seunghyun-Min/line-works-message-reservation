@@ -6,6 +6,17 @@ import { randomUUID } from "crypto";
 
 const SHEET_ID = process.env.SPREADSHEET_ID as string;
 
+// --- スプレッドシート行の型 ---
+type SheetRow = {
+  予約ID: string;
+  送信時間: string;
+  個人: string;
+  グループ: string;
+  メッセージ内容: string;
+  状態: string;
+  ユーザーID: string;
+};
+
 /**
  * ✅ GET: スプレッドシートからデータ読み取り
  */
@@ -20,15 +31,14 @@ export async function GET() {
     const sheets = google.sheets({ version: "v4", auth });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: "A1:F150", // 列が6個想定（予約ID,送信時間,個人,グループ,メッセージ内容,状態）
+      range: "A1:F150",
     });
-    const visibleValues = res.data.values?.map((row) => row.slice(1)) || [];
+
+    // row を string[] 型で明示
+    const visibleValues =
+      res.data.values?.map((row: string[]) => row.slice(1)) || [];
 
     return NextResponse.json(visibleValues);
-
-    //console.log("📄 Spreadsheet Data:", res.data.values);
-
-    //return NextResponse.json(res.data.values || []);
   } catch (err: any) {
     console.error("❌ Spreadsheet 読み取りエラー:", err);
     return NextResponse.json({ error: String(err) }, { status: 500 });
@@ -40,36 +50,42 @@ export async function GET() {
  */
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const body: {
+      sendTime: string;
+      personal?: string;
+      personalIds?: string[];
+      group?: string;
+      message: string;
+    } = await request.json();
+
     const { sendTime, personal, personalIds, group, message } = body;
 
-    // --- 入力バリデーション ---
-    if (!sendTime) {
+    // 入力バリデーション
+    if (!sendTime)
       return NextResponse.json(
         { error: "送信時間を選択してください。" },
         { status: 400 }
       );
-    } else if (!personal && !group) {
+    if (!personal && !group)
       return NextResponse.json(
         { error: "宛先を入力してください。" },
         { status: 400 }
       );
-    } else if (personal && group) {
+    if (personal && group)
       return NextResponse.json(
         { error: "宛先は個人かグループのどちらかのみ選択してください。" },
         { status: 400 }
       );
-    } else if (!message) {
+    if (!message)
       return NextResponse.json(
         { error: "メッセージ内容を入力してください。" },
         { status: 400 }
       );
-    }
 
-    // --- UUID生成 ---
+    // UUID生成
     const reservationId = randomUUID();
 
-    // --- Google Sheets 認証 ---
+    // Google Sheets 認証
     const auth = new GoogleAuth({
       credentials: {
         type: "service_account",
@@ -82,18 +98,17 @@ export async function POST(request: Request) {
 
     const doc = new GoogleSpreadsheet(SHEET_ID, auth);
     await doc.loadInfo();
-
     const sheet = doc.sheetsByIndex[0];
 
-    // --- 新規行を追加 ---
+    // 新規行追加
     await sheet.addRow({
       予約ID: reservationId,
-      送信時間: sendTime || "",
+      送信時間: sendTime,
       個人: personal || "",
       グループ: group || "",
-      メッセージ内容: message || "",
+      メッセージ内容: message,
       状態: "送信待機",
-      ユーザーID: Array.isArray(personalIds) ? personalIds.join(",") : "",
+      ユーザーID: personalIds?.join(",") || "",
     });
 
     return NextResponse.json({ success: true, reservationId });
