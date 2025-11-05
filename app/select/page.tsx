@@ -44,7 +44,6 @@ export default function EmployeeModal() {
   // 検索文字が空なら全員表示
   const filteredEmployees = employees.filter((e) => e.name.includes(search));
 
-  // 선택 버튼 클릭 시 부모 창으로 전달
   const handleSelect = () => {
     if (window.opener) {
       window.opener.postMessage(
