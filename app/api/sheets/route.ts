@@ -58,6 +58,30 @@ export async function GET(request: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
+    const { sendTime, personal, group, message } = body;
+
+    if (!sendTime) {
+      return NextResponse.json(
+        { error: "送信時間を選択してください。" },
+        { status: 400 }
+      );
+    } else if (!personal && !group) {
+      return NextResponse.json(
+        { error: "宛先を入力してください。" },
+        { status: 400 }
+      );
+    } else if (personal && group) {
+      // 둘 다 입력되면 에러
+      return NextResponse.json(
+        { error: "宛先は個人かグループのどちらかのみ選択してください。" },
+        { status: 400 }
+      );
+    } else if (!message) {
+      return NextResponse.json(
+        { error: "メッセージ内容を入力してください。" },
+        { status: 400 }
+      );
+    }
 
     const auth = new google.auth.JWT({
       email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
