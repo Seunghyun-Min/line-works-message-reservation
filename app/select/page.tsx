@@ -38,6 +38,11 @@ export default function EmployeeModal() {
 
   // 選択ボタン押下時
   const handleSelect = () => {
+    if (selectedEmployees.length === 0) {
+      alert("社員を選択してください。"); // ここで必ずアラート
+      return; // 何もせず終了
+    }
+
     isSelecting.current = true;
 
     if (window.opener) {
@@ -154,7 +159,9 @@ export default function EmployeeModal() {
             <button
               id="saveBtn"
               onClick={handleSelect}
-              className="mt-auto self-end px-4 py-2 bg-green-500 text-white rounded"
+              className={`mt-auto self-end px-4 py-2 rounded text-white ${
+                selectedEmployees.length > 0 ? "bg-green-500" : "bg-gray-400"
+              }`}
             >
               選択
             </button>
