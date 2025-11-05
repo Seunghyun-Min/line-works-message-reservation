@@ -9,6 +9,7 @@ const SHEET_ID = process.env.SPREADSHEET_ID as string;
 /**
  * ✅ GET: スプレッドシートからデータ読み取り
  */
+
 export async function GET() {
   try {
     const auth = new google.auth.JWT({
@@ -20,15 +21,22 @@ export async function GET() {
     const sheets = google.sheets({ version: "v4", auth });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: "A1:F150", // 列が6個想定（予約ID,送信時間,個人,グループ,メッセージ内容,状態）
+      range: "A1:F150",
     });
-    const visibleValues = res.data.values?.map((row) => row.slice(1)) || [];
 
-    return NextResponse.json(visibleValues);
+    const rows = res.data.values || [];
 
-    //console.log("📄 Spreadsheet Data:", res.data.values);
+    // A列（予約ID）を含めてオブジェクト化
+    const data = rows.slice(1).map((row) => ({
+      id: row[0], // A列 = 予約ID
+      time: row[1], // B列 = 送信時間
+      targetUser: row[2], // C列 = 個人
+      targetGroup: row[3], // D列 = グループ
+      message: row[4], // E列 = メッセージ内容
+      status: row[5], // F列 = 状態
+    }));
 
-    //return NextResponse.json(res.data.values || []);
+    return NextResponse.json(data);
   } catch (err: any) {
     console.error("❌ Spreadsheet 読み取りエラー:", err);
     return NextResponse.json({ error: String(err) }, { status: 500 });
