@@ -50,6 +50,11 @@ export default function ReservationEditPage() {
     return maxTime;
   };
 
+  const [originalData, setOriginalData] = useState({
+    personal: "",
+    personalIds: [] as string[],
+  });
+
   // ✅ 初期データ取得
   useEffect(() => {
     if (!id) return;
@@ -69,6 +74,11 @@ export default function ReservationEditPage() {
             group: target.targetGroup || "",
             message: target.message || "",
             status: target.status || "",
+          });
+
+          setOriginalData({
+            personal: target.targetUser || "",
+            personalIds: target.userIds || [],
           });
 
           if (target.time) {
@@ -106,13 +116,30 @@ export default function ReservationEditPage() {
   }, []);
 
   // ✅ 修正送信
-  // ✅ 修正版
+  // ✅ 修正版 handleSubmit
   const handleSubmit = async () => {
     try {
+      // バリデーション
+      if (!formData.group && !formData.personal) {
+        alert("宛先を入力してください。（個人またはグループ）");
+        return;
+      }
+
+      // ✅ グループ未入力で個人が空の場合は、送信前に元データを復元
+      const dataToSend = {
+        ...formData,
+        ...(formData.group === "" && formData.personal === ""
+          ? {
+              personal: originalData.personal,
+              personalIds: originalData.personalIds,
+            }
+          : {}),
+      };
+
       const res = await fetch("/api/sheets", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(dataToSend),
       });
 
       const result = await res.json();
@@ -121,7 +148,6 @@ export default function ReservationEditPage() {
         alert("修正が完了しました！");
         router.push("/reservation-list");
       } else {
-        // サーバー側の error メッセージを優先表示
         alert(result.error || "修正に失敗しました。");
       }
     } catch (err) {
@@ -209,7 +235,7 @@ export default function ReservationEditPage() {
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: "5px",
+                    gap: "8px",
                     height: "60px",
                   }}
                 >
@@ -225,6 +251,32 @@ export default function ReservationEditPage() {
                     style={{ cursor: "pointer" }}
                     onClick={openChildWindow}
                   />
+                  {/* ✅ 初期化ボタン追加 */}
+                  <button
+                    style={{
+                      backgroundColor: "#f5f5f5",
+                      border: "1px solid #ccc",
+                      borderRadius: "6px",
+                      padding: "4px 10px",
+                      cursor: "pointer",
+                      fontSize: "14px",
+                    }}
+                    onClick={() => {
+                      if (
+                        window.confirm(
+                          "個人選択を初期化しますか？（未保存です）"
+                        )
+                      ) {
+                        setFormData({
+                          ...formData,
+                          personal: "",
+                          personalIds: [],
+                        });
+                      }
+                    }}
+                  >
+                    初期化
+                  </button>
                 </div>
               </td>
             </tr>
