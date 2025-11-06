@@ -34,9 +34,23 @@ export default function ReservationListPage() {
     fetchData();
   }, []);
 
-  const handleDelete = (id: string) => {
-    setData((prev) => prev.filter((item) => item.id !== id));
-    setDeleteTarget(null);
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await fetch(`/api/sheets?id=${id}`, { method: "DELETE" });
+      const result = await res.json();
+
+      if (res.ok) {
+        alert("削除しました。");
+        setData((prev) => prev.filter((item) => item.id !== id));
+      } else {
+        alert(`削除失敗: ${result.error}`);
+      }
+    } catch (err) {
+      console.error("❌ 削除エラー:", err);
+      alert("削除中にエラーが発生しました。");
+    } finally {
+      setDeleteTarget(null);
+    }
   };
 
   return (
@@ -64,7 +78,7 @@ export default function ReservationListPage() {
           <tr>
             <th style={thStyle}>送信時間</th>
             <th style={{ ...thStyle, width: "216px" }}>個人</th>
-            <th style={thStyle}>グループ</th>
+            <th style={{ ...thStyle, width: "216px" }}>グループ</th>
             <th style={thStyle}>メッセージ内容</th>
             <th style={thStyle}>状態</th>
             <th style={thStyle}>修正</th>
@@ -74,7 +88,20 @@ export default function ReservationListPage() {
         <tbody>
           {currentData.map((row) => (
             <tr key={row.id}>
-              <td style={tdStyle}>{row.time}</td>
+              <td style={tdStyle}>
+                {(() => {
+                  const parts = row.time?.split(" ");
+                  if (!parts || parts.length < 2) return row.time;
+                  const [date, time] = parts;
+                  return (
+                    <>
+                      <div>{date}</div>
+                      <div style={{ fontSize: "15px" }}>{time.slice(0, 5)}</div>
+                    </>
+                  );
+                })()}
+              </td>
+
               {/* <td style={tdStyle}>{row.targetUser}</td> */}
               <td
                 style={{
