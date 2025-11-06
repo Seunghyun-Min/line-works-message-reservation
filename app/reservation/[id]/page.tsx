@@ -106,6 +106,7 @@ export default function ReservationEditPage() {
   }, []);
 
   // ✅ 修正送信
+  // ✅ 修正版
   const handleSubmit = async () => {
     try {
       const res = await fetch("/api/sheets", {
@@ -113,14 +114,19 @@ export default function ReservationEditPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
+
+      const result = await res.json();
+
       if (res.ok) {
         alert("修正が完了しました！");
         router.push("/reservation-list");
       } else {
-        alert("修正に失敗しました。");
+        // サーバー側の error メッセージを優先表示
+        alert(result.error || "修正に失敗しました。");
       }
     } catch (err) {
       console.error("❌ 修正エラー:", err);
+      alert("サーバー通信に失敗しました。");
     }
   };
 
