@@ -1,6 +1,7 @@
 import { GoogleAuth } from "google-auth-library";
 import { GoogleSpreadsheet, GoogleSpreadsheetRow } from "google-spreadsheet";
 import { NextResponse } from "next/server";
+import dayjs from "dayjs";
 
 const SHEET_ID = process.env.SPREADSHEET_ID as string;
 const BOT_ID = process.env.WORKS_BOT_ID as string;
@@ -49,6 +50,7 @@ export async function POST(req: Request) {
     const userIndex = headers.findIndex(
       (h: string) => h.trim() === "ユーザーID"
     );
+    const timeIndex = headers.findIndex((h) => h.trim() === "送信時間");
 
     console.log("📄 シート名:", sheet.title);
     console.log("📋 行数:", rows.length);
@@ -57,10 +59,16 @@ export async function POST(req: Request) {
       rows.map((r: SheetRow) => r._rawData[stateIndex])
     );
 
-    // '送信待機'の行だけFilter
-    const waitingRows = rows.filter(
-      (r: SheetRow) => r._rawData[stateIndex]?.trim() === "送信待機"
-    );
+    // === 条件: 状態が「送信待機」 && 送信時間が現在時刻より前 ===
+    const now = dayjs();
+    const waitingRows = rows.filter((r: SheetRow) => {
+      const state = r._rawData[stateIndex]?.trim();
+      const sendTimeStr = r._rawData[timeIndex]?.trim();
+      if (state !== "送信待機" || !sendTimeStr) return false;
+
+      const sendTime = dayjs(sendTimeStr);
+      return sendTime.isBefore(now);
+    });
 
     console.log("📊 待機中予約数:", waitingRows.length);
 
