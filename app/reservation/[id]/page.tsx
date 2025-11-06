@@ -253,14 +253,7 @@ export default function ReservationEditPage() {
                   />
                   {/* ✅ 初期化ボタン追加 */}
                   <button
-                    style={{
-                      backgroundColor: "#f5f5f5",
-                      border: "1px solid #ccc",
-                      borderRadius: "6px",
-                      padding: "4px 10px",
-                      cursor: "pointer",
-                      fontSize: "14px",
-                    }}
+                    style={buttonStyleBlue}
                     onClick={() => {
                       if (
                         window.confirm(

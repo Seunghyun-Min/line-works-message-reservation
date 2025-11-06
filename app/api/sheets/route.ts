@@ -185,19 +185,29 @@ export async function PATCH(req: Request) {
     // --- 行番号特定 ---
     const rowNumber = targetIndex + 2;
     const oldRow = dataRows[targetIndex];
-    const newPersonalIds =
-      Array.isArray(personalIds) && personalIds.length > 0
-        ? personalIds.join(",")
-        : oldRow[6] || "";
 
-    // --- 更新データ ---
+    // ✅ personalIds の扱い修正
+    let newPersonalIds: string;
+    if (body.hasOwnProperty("personalIds")) {
+      if (Array.isArray(personalIds)) {
+        newPersonalIds = personalIds.length > 0 ? personalIds.join(",") : "";
+      } else if (typeof personalIds === "string") {
+        newPersonalIds = personalIds;
+      } else {
+        newPersonalIds = "";
+      }
+    } else {
+      newPersonalIds = oldRow[6] || "";
+    }
+
+    // ✅ 各項目：空文字なら空として上書き（保持しない）
     const updatedRow = [
       id,
-      sendTime,
-      personal,
-      group,
-      message,
-      status || oldRow[5] || "送信待機",
+      sendTime ?? oldRow[1],
+      personal !== undefined ? personal : oldRow[2],
+      group !== undefined ? group : oldRow[3],
+      message !== undefined ? message : oldRow[4],
+      status !== undefined ? status : oldRow[5] || "送信待機",
       newPersonalIds,
     ];
 
