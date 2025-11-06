@@ -189,3 +189,71 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }
+
+/**
+ * DELETE: 指定した予約IDのデータを削除
+ */
+export async function DELETE(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "削除する予約IDが指定されていません。" },
+        { status: 400 }
+      );
+    }
+
+    const auth = new google.auth.JWT({
+      email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+      key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+    });
+
+    const sheets = google.sheets({ version: "v4", auth });
+
+    // 現在のデータ取得
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: "A1:G150",
+    });
+
+    const rows = res.data.values || [];
+    const header = rows[0];
+    const dataRows = rows.slice(1);
+
+    // 対象行の検索
+    const targetIndex = dataRows.findIndex((row) => row[0] === id);
+
+    if (targetIndex === -1) {
+      return NextResponse.json(
+        { error: `ID「${id}」が見つかりません。` },
+        { status: 404 }
+      );
+    }
+
+    // 対象行を削除（配列上から）
+    dataRows.splice(targetIndex, 1);
+
+    // 新しい配列（ヘッダー含む）として再書き込み
+    await sheets.spreadsheets.values.clear({
+      spreadsheetId: SHEET_ID,
+      range: "A1:G150",
+    });
+
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SHEET_ID,
+      range: "A1",
+      valueInputOption: "RAW",
+      requestBody: {
+        values: [header, ...dataRows],
+      },
+    });
+
+    return NextResponse.json({ success: true, deletedId: id });
+  } catch (err: any) {
+    console.error("❌ DELETE エラー:", err);
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}
