@@ -1,8 +1,5 @@
 "use client";
 
-// 1️⃣ 반드시 "use client" 바로 아래 선언
-export const dynamic = "force-dynamic";
-
 import { useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
@@ -19,18 +16,19 @@ export default function CallbackPage() {
 
     const exchangeCodeForToken = async () => {
       try {
-        const res = await fetch("/api/token", {
+        const tokenRes = await fetch("/api/token", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ code }),
         });
 
-        if (!res.ok) {
-          console.error("Token exchange failed:", res.status);
+        if (!tokenRes.ok) {
+          console.error("Token exchange failed:", tokenRes.status);
           router.push("/login");
           return;
         }
 
+        // 토큰이 httpOnly 쿠키에 저장되면 홈으로 이동
         router.push("/");
       } catch (err) {
         console.error("Error exchanging code:", err);
