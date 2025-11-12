@@ -1,55 +1,49 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 
 export default function CallbackPage() {
   const searchParams = useSearchParams();
-  const [userList, setUserList] = useState<any[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     const code = searchParams.get("code");
-    if (!code) return;
+    if (!code) {
+      router.push("/login");
+      return;
+    }
 
-    console.log("code:", code);
+    const exchangeCodeForToken = async () => {
+      try {
+        // Exchange code for access token
+        const tokenRes = await fetch("/api/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code }),
+        });
 
-    const fetchTokenAndUsers = async () => {
-      // 1️⃣ トークン交換
-      const tokenRes = await fetch("/api/token", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code }),
-      });
+        if (!tokenRes.ok) {
+          console.error("Token exchange failed:", tokenRes.status);
+          router.push("/login");
+          return;
+        }
 
-      const tokenData = await tokenRes.json();
-      const accessToken = tokenData.access_token;
-      console.log("accessToken:", accessToken);
-
-      // 2️⃣ 社員リスト
-      const userRes = await fetch("https://www.worksapis.com/v1.0/users", {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      const userData = await userRes.json();
-      setUserList(userData.userList || []);
+        // Token is now stored in httpOnly cookie via /api/token response
+        // Redirect to home page where users list will be fetched
+        router.push("/");
+      } catch (err) {
+        console.error("Error exchanging code:", err);
+        router.push("/login");
+      }
     };
 
-    fetchTokenAndUsers();
-  }, [searchParams]);
+    exchangeCodeForToken();
+  }, [searchParams, router]);
 
   return (
-    <div>
-      <h1>社員リスト</h1>
-      <ul>
-        {userList.map((u: any) => (
-          <li key={u.userId}>
-            {u.userName.lastName} {u.userName.firstName} ({u.userId})
-          </li>
-        ))}
-      </ul>
+    <div style={{ textAlign: "center", padding: "40px" }}>
+      <p>ログイン中...</p>
     </div>
   );
 }

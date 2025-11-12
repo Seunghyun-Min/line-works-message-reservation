@@ -20,32 +20,41 @@ export default function HomePage() {
 
   const containerStyle: React.CSSProperties = {
     display: "flex",
+    flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
-    height: "100vh",
-    gap: "40px",
+    minHeight: "100vh",
+    gap: "20px",
     backgroundColor: "#f7f7f7",
+  };
+
+  const buttonGroupStyle: React.CSSProperties = {
+    display: "flex",
+    flexDirection: "column",
+    gap: "20px",
   };
 
   return (
     <div style={containerStyle}>
-      <button
-        style={buttonStyle}
-        onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.8")}
-        onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-        onClick={() => router.push("/reservation")}
-      >
-        予約ページへ
-      </button>
+      <div style={buttonGroupStyle}>
+        <button
+          style={buttonStyle}
+          onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.8")}
+          onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+          onClick={() => router.push("/reservation")}
+        >
+          予約ページへ
+        </button>
 
-      <button
-        style={buttonStyle}
-        onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.8")}
-        onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-        onClick={() => router.push("/reservation-list")}
-      >
-        予約一覧へ
-      </button>
+        <button
+          style={buttonStyle}
+          onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.8")}
+          onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+          onClick={() => router.push("/reservation-list")}
+        >
+          予約一覧へ
+        </button>
+      </div>
     </div>
   );
 }
