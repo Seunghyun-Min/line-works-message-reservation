@@ -17,9 +17,10 @@ export default function ReservationPage() {
     authUrl.searchParams.set("response_type", "code");
     authUrl.searchParams.set("scope", process.env.NEXT_PUBLIC_SCOPE!);
     authUrl.searchParams.set("state", "lineworks_oauth");
+    // redirect to LINE WORKS OAuth
     window.location.href = authUrl.toString();
   };
-  console.log("CLIENT_ID:", process.env.NEXT_PUBLIC_CLIENT_ID);
+  // NOTE: do not log secrets or client ids in production
 
   return (
     <div>
@@ -30,6 +31,7 @@ export default function ReservationPage() {
       >
         ログイン
       </button>
+      {/* debug URL removed */}
 
       <div>
         <h2>社員リスト</h2>
