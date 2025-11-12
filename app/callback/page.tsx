@@ -1,10 +1,10 @@
 "use client";
 
+// 1️⃣ 반드시 "use client" 바로 아래 선언
+export const dynamic = "force-dynamic";
+
 import { useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-
-// Next.js 16+ App Router에서 prerender를 막기 위해 dynamic 옵션 사용
-export const dynamic = "force-dynamic";
 
 export default function CallbackPage() {
   const searchParams = useSearchParams();
@@ -12,7 +12,6 @@ export default function CallbackPage() {
 
   useEffect(() => {
     const code = searchParams.get("code");
-
     if (!code) {
       router.push("/login");
       return;
@@ -33,8 +32,8 @@ export default function CallbackPage() {
         }
 
         router.push("/");
-      } catch (error) {
-        console.error("Error exchanging code:", error);
+      } catch (err) {
+        console.error("Error exchanging code:", err);
         router.push("/login");
       }
     };
