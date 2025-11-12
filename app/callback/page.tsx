@@ -9,6 +9,7 @@ export default function CallbackPage() {
 
   useEffect(() => {
     const code = searchParams.get("code");
+
     if (!code) {
       router.push("/login");
       return;
@@ -16,24 +17,21 @@ export default function CallbackPage() {
 
     const exchangeCodeForToken = async () => {
       try {
-        // Exchange code for access token
-        const tokenRes = await fetch("/api/token", {
+        const res = await fetch("/api/token", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ code }),
         });
 
-        if (!tokenRes.ok) {
-          console.error("Token exchange failed:", tokenRes.status);
+        if (!res.ok) {
+          console.error("Token exchange failed:", res.status);
           router.push("/login");
           return;
         }
 
-        // Token is now stored in httpOnly cookie via /api/token response
-        // Redirect to home page where users list will be fetched
         router.push("/");
-      } catch (err) {
-        console.error("Error exchanging code:", err);
+      } catch (error) {
+        console.error("Error exchanging code:", error);
         router.push("/login");
       }
     };
