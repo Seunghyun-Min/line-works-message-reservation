@@ -3,6 +3,9 @@
 import { useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
+// Next.js 16+ App Router에서 prerender를 막기 위해 dynamic 옵션 사용
+export const dynamic = "force-dynamic";
+
 export default function CallbackPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
