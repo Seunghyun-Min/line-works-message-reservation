@@ -1,59 +1,47 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 
-export default function HomePage() {
-  const router = useRouter();
+export default function ReservationPage() {
+  const [userList, setUserList] = useState([]);
 
-  const buttonStyle: React.CSSProperties = {
-    backgroundColor: "rgb(7, 181, 59)",
-    color: "#fff",
-    fontSize: "20px",
-    fontWeight: "bold",
-    padding: "20px 40px",
-    borderRadius: "12px",
-    border: "none",
-    cursor: "pointer",
-    width: "220px",
-    transition: "0.2s",
+  const handleLogin = () => {
+    const authUrl = new URL(
+      "https://auth.worksmobile.com/oauth2/v2.0/authorize"
+    );
+    authUrl.searchParams.set("client_id", process.env.NEXT_PUBLIC_CLIENT_ID!);
+    authUrl.searchParams.set(
+      "redirect_uri",
+      process.env.NEXT_PUBLIC_REDIRECT_URI!
+    );
+    authUrl.searchParams.set("response_type", "code");
+    authUrl.searchParams.set("scope", process.env.NEXT_PUBLIC_SCOPE!);
+    authUrl.searchParams.set("state", "lineworks_oauth");
+    // redirect to LINE WORKS OAuth
+    window.location.href = authUrl.toString();
   };
-
-  const containerStyle: React.CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
-    minHeight: "100vh",
-    gap: "20px",
-    backgroundColor: "#f7f7f7",
-  };
-
-  const buttonGroupStyle: React.CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    gap: "20px",
-  };
+  // NOTE: do not log secrets or client ids in production
 
   return (
-    <div style={containerStyle}>
-      <div style={buttonGroupStyle}>
-        <button
-          style={buttonStyle}
-          onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.8")}
-          onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-          onClick={() => router.push("/reservation")}
-        >
-          予約ページへ
-        </button>
+    <div>
+      <h1>LINEWORKS ログイン</h1>
+      <button
+        onClick={handleLogin}
+        className="px-4 py-2 bg-blue-500 text-white rounded"
+      >
+        ログイン
+      </button>
+      {/* debug URL removed */}
 
-        <button
-          style={buttonStyle}
-          onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.8")}
-          onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-          onClick={() => router.push("/reservation-list")}
-        >
-          予約一覧へ
-        </button>
+      <div>
+        <h2>社員リスト</h2>
+        <ul>
+          {userList.map((u: any) => (
+            <li key={u.userId}>
+              {u.userName.lastName} {u.userName.firstName} ({u.userId})
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );

@@ -10,7 +10,7 @@ export default function CallbackPage() {
   useEffect(() => {
     const code = searchParams.get("code");
     if (!code) {
-      router.push("/login");
+      router.push("/");
       return;
     }
 
@@ -24,15 +24,15 @@ export default function CallbackPage() {
 
         if (!tokenRes.ok) {
           console.error("Token exchange failed:", tokenRes.status);
-          router.push("/login");
+          router.push("/");
           return;
         }
 
         // 토큰이 httpOnly 쿠키에 저장되면 홈으로 이동
-        router.push("/");
+        router.push("/main");
       } catch (err) {
         console.error("Error exchanging code:", err);
-        router.push("/login");
+        router.push("/");
       }
     };
 
