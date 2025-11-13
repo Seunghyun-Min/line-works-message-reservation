@@ -9,26 +9,30 @@ export default function CallbackPage() {
 
   useEffect(() => {
     const code = searchParams.get("code");
-    if (!code) {
+    const state = searchParams.get("state");
+
+    // 코드나 state가 없으면 홈으로 이동
+    if (!code || state !== "lineworks_oauth") {
       router.push("/");
       return;
     }
 
     const exchangeCodeForToken = async () => {
       try {
-        const tokenRes = await fetch("/api/token", {
+        // 서버 API 호출로 액세스 토큰 발급
+        const res = await fetch("/api/token", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ code }),
         });
 
-        if (!tokenRes.ok) {
-          console.error("Token exchange failed:", tokenRes.status);
+        if (!res.ok) {
+          console.error("Token exchange failed:", res.status);
           router.push("/");
           return;
         }
 
-        // 토큰이 httpOnly 쿠키에 저장되면 홈으로 이동
+        // 토큰 발급 성공하면 메인 페이지로 이동
         router.push("/main");
       } catch (err) {
         console.error("Error exchanging code:", err);
@@ -41,7 +45,8 @@ export default function CallbackPage() {
 
   return (
     <div style={{ textAlign: "center", padding: "40px" }}>
-      <p>ログイン中...</p>
+      <h1>ログイン中…</h1>
+      <p>しばらくお待ちください。</p>
     </div>
   );
 }
