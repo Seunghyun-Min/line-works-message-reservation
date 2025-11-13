@@ -6,18 +6,19 @@ export default function ReservationPage() {
   const [userList, setUserList] = useState([]);
 
   const handleLogin = () => {
+    const redirectUri =
+      process.env.NEXT_PUBLIC_REDIRECT_URI ||
+      "https://line-works-message-reservation-f7y1.vercel.app/callback"; // fallback
+
     const authUrl = new URL(
       "https://auth.worksmobile.com/oauth2/v2.0/authorize"
     );
     authUrl.searchParams.set("client_id", process.env.NEXT_PUBLIC_CLIENT_ID!);
-    authUrl.searchParams.set(
-      "redirect_uri",
-      process.env.NEXT_PUBLIC_REDIRECT_URI!
-    );
+    authUrl.searchParams.set("redirect_uri", redirectUri);
     authUrl.searchParams.set("response_type", "code");
     authUrl.searchParams.set("scope", process.env.NEXT_PUBLIC_SCOPE!);
     authUrl.searchParams.set("state", "lineworks_oauth");
-    // redirect to LINE WORKS OAuth
+
     window.location.href = authUrl.toString();
   };
   // NOTE: do not log secrets or client ids in production
