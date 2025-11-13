@@ -11,9 +11,11 @@ const AUTH_URL = "https://auth.worksmobile.com/oauth2/v2.0/authorize";
 const TOKEN_URL = "https://auth.worksmobile.com/oauth2/v2.0/token";
 
 const clientId = process.env.CLIENT_ID;
-const redirectUri = process.env.REDIRECT_URI;
-const scope = process.env.SCOPE;
 const clientSecret = process.env.CLIENT_SECRET;
+const scope = process.env.SCOPE;
+const redirectUri = isProd
+  ? "https://line-works-message-reservation-f7y1.vercel.app/callback"
+  : "http://localhost:3000/callback";
 
 const TOKEN_STORE = path.join(process.cwd(), ".tokens.json");
 
