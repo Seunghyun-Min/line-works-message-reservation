@@ -12,6 +12,8 @@ export default function CallbackPage() {
     const code = searchParams.get("code");
     const state = searchParams.get("state");
 
+    console.log("[Callback] code:", code, "state:", state);
+
     // 코드나 state가 올바르지 않으면 홈으로 이동
     if (!code || state !== "lineworks_oauth") {
       router.push("/");
@@ -27,6 +29,11 @@ export default function CallbackPage() {
           body: JSON.stringify({ code }),
         });
 
+        console.log("[Callback] /api/token response status:", res.status);
+
+        const data = await res.json();
+        console.log("[Callback] /api/token response data:", data);
+
         if (!res.ok) {
           console.error("Token exchange failed:", res.status);
           router.push("/");
@@ -36,7 +43,7 @@ export default function CallbackPage() {
         // 토큰 발급 성공하면 메인 페이지로 이동
         router.push("/main");
       } catch (err) {
-        console.error("Error exchanging code:", err);
+        console.error("[Callback] Error exchanging code:", err);
         router.push("/");
       }
     };
