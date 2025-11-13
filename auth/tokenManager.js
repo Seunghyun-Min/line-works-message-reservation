@@ -14,12 +14,21 @@ const clientId = process.env.CLIENT_ID;
 const clientSecret = process.env.CLIENT_SECRET;
 const scope = process.env.SCOPE;
 
-// ✅ 환경에 따라 redirectUri 자동 분기
-const isProd =
-  process.env.VERCEL === "1" || process.env.NODE_ENV === "production";
-const redirectUri = isProd
-  ? "https://line-works-message-reservation-f7y1.vercel.app/callback"
-  : "http://localhost:3000/callback";
+// ✅ redirect URI를 환경변수에서 직접 읽기
+// NEXT_PUBLIC_REDIRECT_URI → REDIRECT_URI → 기본 로컬값 순서로 탐색
+const redirectUri =
+  process.env.NEXT_PUBLIC_REDIRECT_URI ||
+  process.env.REDIRECT_URI ||
+  "http://localhost:3000/callback";
+
+// Vercel 배포환경 확인용 로그
+console.log("🌍 [tokenManager] redirectUri =", redirectUri);
+console.log("🔧 Environment:", {
+  NEXT_PUBLIC_REDIRECT_URI: process.env.NEXT_PUBLIC_REDIRECT_URI,
+  REDIRECT_URI: process.env.REDIRECT_URI,
+  NODE_ENV: process.env.NODE_ENV,
+  VERCEL: process.env.VERCEL,
+});
 
 const TOKEN_STORE = path.join(process.cwd(), ".tokens.json");
 
@@ -56,8 +65,6 @@ async function exchangeCodeForToken(code) {
   return res.data;
 }
 
-export { buildAuthUrl };
-
 async function saveTokensToDisk(tokenData) {
   try {
     const expiresIn = tokenData.expires_in ? Number(tokenData.expires_in) : 0;
@@ -71,8 +78,6 @@ async function saveTokensToDisk(tokenData) {
     console.warn("Could not save tokens to disk:", err.message || err);
   }
 }
-
-export { saveTokensToDisk };
 
 async function loadTokensFromDisk() {
   try {
@@ -155,3 +160,5 @@ export async function getServerAccessTokenInteractive() {
 
   return tokenData.access_token;
 }
+
+export { buildAuthUrl };
