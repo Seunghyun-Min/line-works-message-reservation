@@ -1,9 +1,8 @@
+// app/callback/page.client.tsx
 "use client";
 
 import { useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-
-export const dynamic = "force-dynamic";
 
 export default function CallbackPage() {
   const searchParams = useSearchParams();
@@ -13,7 +12,7 @@ export default function CallbackPage() {
     const code = searchParams.get("code");
     const state = searchParams.get("state");
 
-    // 코드나 state가 없으면 홈으로 이동
+    // 코드나 state가 올바르지 않으면 홈으로 이동
     if (!code || state !== "lineworks_oauth") {
       router.push("/");
       return;
