@@ -13,12 +13,19 @@ const TOKEN_URL = "https://auth.worksmobile.com/oauth2/v2.0/token";
 const clientId = process.env.CLIENT_ID;
 const clientSecret = process.env.CLIENT_SECRET;
 const scope = process.env.SCOPE;
+
+// ✅ 환경에 따라 redirectUri 자동 분기
+const isProd =
+  process.env.VERCEL === "1" || process.env.NODE_ENV === "production";
 const redirectUri = isProd
   ? "https://line-works-message-reservation-f7y1.vercel.app/callback"
   : "http://localhost:3000/callback";
 
 const TOKEN_STORE = path.join(process.cwd(), ".tokens.json");
 
+/**
+ * 인증 URL 생성
+ */
 function buildAuthUrl() {
   const params = new URL(AUTH_URL);
   params.searchParams.set("client_id", clientId);
@@ -28,10 +35,13 @@ function buildAuthUrl() {
     Array.isArray(scope) ? scope.join(" ") : scope.replace(/,/g, " ")
   );
   params.searchParams.set("response_type", "code");
-  params.searchParams.set("state", "manual_state");
+  params.searchParams.set("state", "lineworks_oauth");
   return params.toString();
 }
 
+/**
+ * code → access token 교환
+ */
 async function exchangeCodeForToken(code) {
   const params = new URLSearchParams();
   params.append("grant_type", "authorization_code");
@@ -51,8 +61,6 @@ export { buildAuthUrl };
 async function saveTokensToDisk(tokenData) {
   try {
     const expiresIn = tokenData.expires_in ? Number(tokenData.expires_in) : 0;
-    console.log("Expires in:", expiresIn);
-    console.log("Date.now:", Date.now());
     const obj = {
       access_token: tokenData.access_token,
       refresh_token: tokenData.refresh_token,
@@ -88,11 +96,6 @@ async function refreshAccessToken(refreshToken) {
   return res.data;
 }
 
-/**
- * Returns a valid access token for server-side use.
- * - Uses stored tokens on disk
- * - Refreshes if expired
- */
 export async function getServerAccessToken() {
   const stored = await loadTokensFromDisk();
   if (
@@ -112,9 +115,6 @@ export async function getServerAccessToken() {
   throw new Error("No stored tokens available. Complete OAuth flow first.");
 }
 
-/**
- * Interactive version: prompts user to manually login if no tokens exist
- */
 export async function getServerAccessTokenInteractive() {
   const stored = await loadTokensFromDisk();
 
@@ -132,18 +132,18 @@ export async function getServerAccessTokenInteractive() {
     return newToken.access_token;
   }
 
-  // No token, prompt user
   console.log(
-    "⚠️ サーバーにトークンがありません。ブラウザでログインして code を取得してください。"
+    "⚠️ トークンがありません。ブラウザでログインして code を取得してください。"
   );
-  console.log("ブラウザでアクセス:", buildAuthUrl());
+  console.log("アクセス URL:", buildAuthUrl());
 
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
   });
+
   const code = await new Promise((resolve) => {
-    rl.question("ブラウザで取得した code を入力してください: ", (answer) => {
+    rl.question("取得した code を入力してください: ", (answer) => {
       rl.close();
       resolve(answer.trim());
     });
