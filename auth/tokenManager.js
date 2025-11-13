@@ -65,7 +65,7 @@ async function exchangeCodeForToken(code) {
   return res.data;
 }
 
-async function saveTokensToDisk(tokenData) {
+export async function saveTokensToDisk(tokenData) {
   try {
     const expiresIn = tokenData.expires_in ? Number(tokenData.expires_in) : 0;
     const obj = {
@@ -162,3 +162,4 @@ export async function getServerAccessTokenInteractive() {
 }
 
 export { buildAuthUrl };
+export { saveTokensToDisk };
